@@ -769,8 +769,6 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             cart={cart}
             onAddToCart={(product, qty) => addToCart(product, qty)}
             onUpdateQty={(id, delta) => {
-              // Note: For Home view, if multiple cart entries exist for same ID, update the first one or we need a better strategy.
-              // Given Home usually handles items without options (Quick Add), we find the one with NO options.
               const item = cart.find(i => i.id === id && (!i.options || i.options.length === 0));
               if (item && item.cartId) {
                 updateQuantity(item.cartId, delta);
@@ -780,13 +778,15 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
               }
             }}
             storeStatus={storeStatus}
+            isOpen={isOpen}
+            onOpenInfo={() => setCurrentView('store_info')}
           />
         );
 
     }
   };
 
-  const showNavbar = !['onboarding', 'login', 'register', 'product_detail', 'cart', 'checkout', 'settings', 'order_history', 'addresses', 'scheduling', 'payment_methods', 'editor', 'store_info', 'legal'].includes(currentView);
+  const showNavbar = !['onboarding', 'login', 'product_detail', 'cart', 'checkout', 'settings', 'order_history', 'addresses', 'scheduling', 'payment_methods', 'editor', 'store_info', 'legal'].includes(currentView);
 
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto relative shadow-2xl bg-dark-bg">
