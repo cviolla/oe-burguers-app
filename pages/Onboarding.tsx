@@ -70,14 +70,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin, onViewLegal }
               +5.000 clientes satisfeitos
             </p>
           </div>
-
-          <p className="text-[10px] text-white/40 max-w-[280px] mx-auto leading-tight">
-            Ao clicar em Peça seu Lanche, você aceita nossos{' '}
-            <button onClick={() => onViewLegal('terms-of-use')} className="text-primary font-black uppercase tracking-widest hover:underline">Termos</button> e{' '}
-            <button onClick={() => onViewLegal('privacy-policy')} className="text-primary font-black uppercase tracking-widest hover:underline">Privacidade</button>.
-          </p>
         </div>
       </div>
+
+      <p className="absolute bottom-8 left-0 right-0 z-20 text-[10px] text-white/40 max-w-[280px] mx-auto text-center leading-tight">
+        Ao clicar em Peça seu Lanche, você aceita nossos{' '}
+        <button onClick={() => onViewLegal('terms-of-use')} className="text-primary font-black uppercase tracking-widest hover:underline">Termos</button> e{' '}
+        <button onClick={() => onViewLegal('privacy-policy')} className="text-primary font-black uppercase tracking-widest hover:underline">Privacidade</button>.
+      </p>
     </div>
   );
 };
