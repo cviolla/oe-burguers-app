@@ -199,7 +199,7 @@ const Home: React.FC<HomeProps> = ({ userName, products, onProductClick, onLogou
               <h3 className="text-sm font-bold">Resultados: {searchQuery}</h3>
               <span className="text-dark-text-secondary text-[10px] uppercase font-bold tracking-widest">{filteredProducts.length} itens</span>
             </div>
-            <div className="grid grid-cols-1 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {filteredProducts.map((product) => {
                 const quantity = cart.filter(item => item.id === product.id).reduce((acc, item) => acc + item.quantity, 0);
 
@@ -231,7 +231,7 @@ const Home: React.FC<HomeProps> = ({ userName, products, onProductClick, onLogou
                 <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
                 Destaques
               </h3>
-              <div className="grid grid-cols-1 gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {featuredProducts.map((product) => {
                   const quantity = cart.filter(item => item.id === product.id).reduce((acc, item) => acc + item.quantity, 0);
 
@@ -267,7 +267,7 @@ const Home: React.FC<HomeProps> = ({ userName, products, onProductClick, onLogou
                     <span className="w-1.5 h-1.5 bg-white/10 rounded-full"></span>
                     {cat}
                   </h3>
-                  <div className="grid grid-cols-1 gap-3.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {catProducts.map((product) => {
                       const quantity = cart.filter(item => item.id === product.id).reduce((acc, item) => acc + item.quantity, 0);
 

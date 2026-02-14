@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [isAddonsVisible, setIsAddonsVisible] = useState(true);
   const [storeStatus, setStoreStatus] = useState<'auto' | 'open' | 'closed'>('auto');
   const [isOpen, setIsOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [addresses, setAddresses] = useState<any[]>(() => {
     const saved = localStorage.getItem('oe_addresses');
     if (saved) return JSON.parse(saved);
@@ -114,7 +115,27 @@ const App: React.FC = () => {
     };
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    // Solicitar permissão de notificação no primeiro clique (necessário para iOS/Safari)
+    const requestNotificationPermission = () => {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      window.removeEventListener('click', requestNotificationPermission);
+    };
+    window.addEventListener('click', requestNotificationPermission);
+
+    const handleInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('click', requestNotificationPermission);
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+    };
   }, []);
 
   useEffect(() => {
@@ -157,7 +178,7 @@ const App: React.FC = () => {
       }
     } else {
       // Se a loja está fechada, redireciona para store_info apenas se o usuário tentar ir para o checkout ou agendamento
-      const restrictedViews = ['checkout', 'scheduling'];
+      const restrictedViews = ['checkout', 'scheduling', 'cart'];
       if (restrictedViews.includes(currentView)) {
         setCurrentView('store_info');
       }
@@ -555,10 +576,10 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
 👆 Por favor, envie-nos o comprovante do PIX. Assim que recebermos estaremos atendendo você.`;
 
       const encodedMessage = encodeURIComponent(message);
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${storeWhatsApp}&text=${encodedMessage}`;
+      const whatsappUrl = `https://wa.me/${storeWhatsApp}?text=${encodedMessage}`;
 
-      // Open WhatsApp
-      window.open(whatsappUrl, '_blank');
+      // Redirecionar para o WhatsApp - Usando location.assign para evitar bloqueio de popup no Safari iOS após await
+      window.location.assign(whatsappUrl);
 
       setLastCompletedCart([...cart]);
       setCart([]);
@@ -696,8 +717,9 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onHistory={() => setCurrentView('order_history')}
             onAddresses={() => setCurrentView('addresses')}
             onNavigate={setCurrentView}
-            onAdmin={() => setCurrentView('editor')}
             isAdmin={!!session}
+            deferredPrompt={deferredPrompt}
+            onPromptUsed={() => setDeferredPrompt(null)}
           />
         );
       case 'order_history':
@@ -782,7 +804,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
   const showNavbar = !['onboarding', 'login', 'product_detail', 'cart', 'checkout', 'settings', 'order_history', 'addresses', 'scheduling', 'payment_methods', 'editor', 'store_info', 'legal'].includes(currentView);
 
   return (
-    <div className="flex flex-col min-h-screen max-w-md mx-auto relative shadow-2xl bg-dark-bg">
+    <div className={`flex flex-col min-h-screen ${currentView === 'editor' ? 'w-full' : 'max-w-md md:max-w-4xl mx-auto'} relative shadow-2xl bg-dark-bg transition-all duration-500`}>
       <main className="flex-1 overflow-visible">
         {renderView()}
       </main>

@@ -237,7 +237,22 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
         const channel = supabase
             .channel('admin_dashboard_v2')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
+                if (payload.eventType === 'INSERT') {
+                    // Notificação do Navegador
+                    if (Notification.permission === 'granted') {
+                        new Notification('🍔 Novo Pedido!', {
+                            body: `${payload.new.client_name} acabou de fazer um pedido de R$ ${(payload.new.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+                            icon: '/logo.png',
+                            badge: '/favicon-site.png'
+                        });
+                    }
+
+                    // Forçar o som de alerta a tocar imediatamente se houver interação
+                    if (hasInteracted && audioRef.current) {
+                        audioRef.current.play().catch(console.error);
+                    }
+                }
                 fetchOrders();
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
@@ -801,30 +816,29 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </div>
                 </div>
 
-                {/* Stats Dashboard */}
                 {!showArchivedClients && (
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-dark-card p-3 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-dark-card p-4 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group">
                             <div className="absolute -right-4 -top-4 w-16 h-16 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
                             <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Total Clientes</p>
                             <p className="text-xl font-black ">{clients.length}</p>
                         </div>
-                        <div className="bg-dark-card p-3 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group text-emerald-500">
+                        <div className="bg-dark-card p-4 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group text-emerald-500">
                             <p className="text-[8px] font-black text-emerald-500/30 uppercase tracking-[0.2em]">Faturamento Base</p>
-                            <p className="text-xl font-black ">{formatCurrency(clients.reduce((acc, curr) => acc + curr.total_spent_cents, 0))}</p>
+                            <p className="text-xl font-black ">R$ {(clients.reduce((acc, curr) => acc + curr.total_spent_cents, 0) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                         </div>
-                        <div className="bg-dark-card p-3 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group">
+                        <div className="bg-dark-card p-4 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group">
                             <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Ticket Médio</p>
                             <p className="text-xl font-black ">{clients.length > 0 ? formatCurrency(clients.reduce((acc, curr) => acc + curr.total_spent_cents, 0) / clients.length) : 'R$ 0,00'}</p>
                         </div>
-                        <div className="bg-dark-card p-3 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group">
+                        <div className="bg-dark-card p-4 rounded-xl border border-white/5 space-y-1 premium-shadow relative overflow-hidden group">
                             <p className="text-[8px] font-black text-primary/40 uppercase tracking-[0.2em]">Fãs de VIP ⭐</p>
                             <p className="text-xl font-black ">{clients.filter(c => c.total_orders >= 5).length}</p>
                         </div>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {clients.map((client) => (
                         <div
                             key={client.phone}
@@ -966,33 +980,57 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const renderTabs = () => (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm">
-            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-2xl border border-white/10 rounded-full p-2 lg:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-around relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite]"></div>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm md:static md:translate-x-0 md:w-64 md:h-screen md:max-w-none md:bottom-0 md:left-0 transition-all duration-500">
+            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-2xl border border-white/10 rounded-full p-2 lg:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:rounded-none md:justify-start md:gap-4 md:pt-12 md:px-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] md:hidden"></div>
+
+                {/* Desktop Logo Placeholder */}
+                <div className="hidden md:flex flex-col items-center mb-10 w-full px-4 text-center">
+                    <img src="/logo.png" className="w-16 h-16 object-contain mb-4" alt="OE Logo" />
+                    <h2 className="text-sm font-black text-white uppercase tracking-tighter">OE Administração</h2>
+                    <p className="text-[7px] text-primary font-black uppercase tracking-[0.4em] opacity-60">Control Panel v2</p>
+                </div>
+
                 {[
-                    { id: 'pdv', label: 'PDV', icon: 'point_of_sale' },
-                    { id: 'vendas', label: 'Vendas', icon: 'analytics' },
-                    { id: 'clientes', label: 'Clientes', icon: 'groups' },
-                    { id: 'cozinha', label: 'Cozinha', icon: 'soup_kitchen' },
-                    { id: 'cardapio', label: 'Menu', icon: 'restaurant_menu' },
-                    { id: 'logistica', label: 'Entrega', icon: 'local_shipping' },
+                    { id: 'pdv', label: 'Painel PDV', icon: 'point_of_sale' },
+                    { id: 'vendas', label: 'Vendas & Relatórios', icon: 'analytics' },
+                    { id: 'clientes', label: 'Base de Clientes', icon: 'groups' },
+                    { id: 'cozinha', label: 'Monitor Cozinha', icon: 'soup_kitchen' },
+                    { id: 'cardapio', label: 'Gestão Cardápio', icon: 'restaurant_menu' },
+                    { id: 'logistica', label: 'Logística Entrega', icon: 'local_shipping' },
                 ].map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as AdminTab)}
-                        className={`flex flex-col items-center gap-1 transition-all duration-300 relative group min-w-[45px] lg:min-w-[55px] ${activeTab === tab.id
-                            ? 'text-primary scale-110'
-                            : 'text-white/30 hover:text-white/60'
+                        className={`flex flex-col items-center gap-1 transition-all duration-300 relative group min-w-[45px] lg:min-w-[55px] md:flex-row md:w-full md:gap-4 md:px-5 md:py-4 md:rounded-2xl ${activeTab === tab.id
+                            ? 'text-primary scale-110 md:bg-primary/10 md:scale-100 md:shadow-[inset_0_0_20px_rgba(255,183,0,0.05)]'
+                            : 'text-white/30 hover:text-white/60 md:hover:bg-white/5'
                             }`}
                     >
                         <span className="material-icons-round text-xl transition-transform duration-300">
                             {tab.icon}
                         </span>
-                        <span className="text-[8px] font-black uppercase tracking-[0.1em] leading-none mb-1">
+                        <span className="text-[8px] font-black uppercase tracking-[0.1em] leading-none mb-1 md:text-[10px] md:tracking-widest md:mb-0">
                             {tab.label}
                         </span>
+
+                        {/* Desktop Active Indicator */}
+                        {activeTab === tab.id && (
+                            <div className="hidden md:block absolute left-0 w-1 h-6 bg-primary rounded-r-full shadow-[0_0_100px_rgba(255,183,0,0.5)]"></div>
+                        )}
                     </button>
                 ))}
+
+                {/* Desktop Logout at Bottom */}
+                <div className="hidden md:flex mt-auto w-full p-4 border-t border-white/5">
+                    <button
+                        onClick={() => confirm('Deseja realmente sair?') && onLogout?.()}
+                        className="w-full flex items-center gap-4 px-5 py-4 text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all font-black uppercase text-[10px] tracking-widest"
+                    >
+                        <span className="material-icons-round">logout</span>
+                        Sair do Painel
+                    </button>
+                </div>
             </nav>
         </div>
     );
@@ -1228,17 +1266,17 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </div>
                 </div>
                 {/* Metrics Grid */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                         { label: 'Receita Líquida', value: formatCurrency(totalVendas), color: 'text-primary' },
                         { label: 'Pedidos Total', value: filteredOrdersRange.filter(o => o.status === 'finalizado').length, color: 'text-white' },
                         { label: 'Pedidos Hoje', value: pedidosHoje, color: 'text-white' },
                         { label: 'Ticket Médio', value: filteredOrdersRange.length > 0 ? formatCurrency(totalVendas / filteredOrdersRange.length) : 'R$ 0,00', color: 'text-emerald-500' },
                     ].map((metric, i) => (
-                        <div key={i} className="bg-dark-card border border-white/5 p-3 rounded-lg flex flex-col gap-0.5 premium-shadow relative overflow-hidden group">
+                        <div key={i} className="bg-dark-card border border-white/5 p-4 rounded-xl flex flex-col gap-0.5 premium-shadow relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 group-hover:bg-primary transition-colors"></div>
                             <span className="text-[7px] font-black uppercase text-white/20 tracking-[0.2em] leading-tight mb-1">{metric.label}</span>
-                            <h4 className={`text-xs font-black tracking-tighter leading-none ${metric.color} truncate`}>{metric.value}</h4>
+                            <h4 className={`text-sm font-black tracking-tighter leading-none ${metric.color} truncate`}>{metric.value}</h4>
                         </div>
                     ))}
                 </div>
@@ -1467,7 +1505,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     </button>
                                 </div>
                             </div>
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {catProducts.map(product => (
                                     <div
                                         key={product.id}
@@ -1522,7 +1560,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 <div className="space-y-8">
 
 
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {(addons || []).map(addon => (
                             <div
                                 key={addon.id}
@@ -1627,7 +1665,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(deliveryFees || []).filter(f => showLogisticaTrash ? !f.is_active : f.is_active).map(fee => (
                         <div
                             key={fee.id}
@@ -1704,9 +1742,9 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
 
     return (
-        <div className="min-h-screen bg-dark-bg flex flex-col text-white pb-10">
-            {/* Super Header */}
-            <header className="px-6 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-dark-bg/80 backdrop-blur-2xl z-50 border-b border-white/5">
+        <div className="min-h-screen bg-dark-bg flex flex-col md:flex-row text-white">
+            {/* Super Header (Mobile only) */}
+            <header className="px-6 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-dark-bg/80 backdrop-blur-2xl z-50 border-b border-white/5 md:hidden">
                 <div className="flex items-center gap-4">
                     <button onClick={onBack} className="w-12 h-12 aspect-square shrink-0 rounded-full bg-dark-card border border-white/10 flex items-center justify-center text-primary active:scale-90 transition-all shadow-2xl hover:bg-primary hover:text-dark-bg hover:border-primary">
                         <span className="material-icons-round text-xl">arrow_back</span>
@@ -1717,40 +1755,69 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-
-                    {activeTab === 'logistica' && (
-                        <button
-                            onClick={() => setShowLogisticaTrash(!showLogisticaTrash)}
-                            className={`w-12 h-12 aspect-square shrink-0 rounded-full flex items-center justify-center transition-all shadow-2xl ${showLogisticaTrash ? 'bg-rose-500 text-white scale-105' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'}`}
-                            title={showLogisticaTrash ? "Ver Taxas Ativas" : "Ver Taxas Ocultas"}
-                        >
-                            <span className="material-icons-round text-xl">{showLogisticaTrash ? 'local_shipping' : 'auto_delete'}</span>
-                        </button>
-                    )}
                     <button
                         onClick={() => {
                             if (confirm('Deseja realmente sair do painel administrativo?')) {
                                 if (onLogout) onLogout();
                             }
                         }}
-                        className="w-12 h-12 aspect-square shrink-0 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-2xl hover:bg-rose-500 hover:text-white"
-                        title="Sair do Admin"
+                        className="w-12 h-12 aspect-square shrink-0 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-2xl"
                     >
                         <span className="material-icons-round text-xl">logout</span>
                     </button>
                 </div>
             </header>
 
-            <main className="p-4 pb-24 flex-1 max-w-[1400px] mx-auto w-full">
-                {activeTab === 'pdv' && renderPDV()}
-                {activeTab === 'vendas' && renderVendas()}
-                {activeTab === 'clientes' && renderClientes()}
-                {activeTab === 'cardapio' && renderCardapio()}
-                {activeTab === 'cozinha' && renderCozinha()}
-                {activeTab === 'logistica' && renderLogistica()}
-            </main>
+            {/* Desktop Navigation Sidebar */}
+            <div className="hidden md:block sticky top-0 h-screen">
+                {renderTabs()}
+            </div>
 
-            {renderTabs()}
+            <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
+                {/* Desktop Top Bar */}
+                <header className="hidden md:flex items-center justify-between px-10 py-6 border-b border-white/5 bg-dark-bg/40 backdrop-blur-3xl sticky top-0 z-40">
+                    <div className="flex items-center gap-4">
+                        <div className="w-1 h-8 bg-primary rounded-full"></div>
+                        <h2 className="text-xl font-black uppercase tracking-tight">
+                            {activeTab === 'pdv' && 'Terminal PDV'}
+                            {activeTab === 'vendas' && 'Relatórios e Vendas'}
+                            {activeTab === 'clientes' && 'Gestão de Clientes'}
+                            {activeTab === 'cozinha' && 'Monitor de Produção'}
+                            {activeTab === 'cardapio' && 'Gestão de Cardápio'}
+                            {activeTab === 'logistica' && 'Logística de Entrega'}
+                        </h2>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col items-end">
+                            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Status Geral</p>
+                            <div className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Sistema Conectado</p>
+                            </div>
+                        </div>
+                        <button onClick={onBack} className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2">
+                            <span className="material-icons-round text-base">web</span>
+                            Ver Loja
+                        </button>
+                    </div>
+                </header>
+
+                <div className="p-4 md:p-10 pb-24 md:pb-10 flex-1 overflow-y-auto no-scrollbar">
+                    <div className="max-w-[1600px] mx-auto w-full">
+                        {activeTab === 'pdv' && renderPDV()}
+                        {activeTab === 'vendas' && renderVendas()}
+                        {activeTab === 'clientes' && renderClientes()}
+                        {activeTab === 'cardapio' && renderCardapio()}
+                        {activeTab === 'cozinha' && renderCozinha()}
+                        {activeTab === 'logistica' && renderLogistica()}
+                    </div>
+                </div>
+
+                {/* Mobile Tabs Wrapper */}
+                <div className="md:hidden">
+                    {renderTabs()}
+                </div>
+            </main>
 
             {/* Order Detail Modal */}
             {selectedOrder && (

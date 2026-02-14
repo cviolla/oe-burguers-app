@@ -31,14 +31,14 @@ const Legal: React.FC<LegalProps> = ({ slug, onBack }) => {
 
     return (
         <div className="min-h-screen bg-dark-bg flex flex-col">
-            <header className="px-6 pt-12 pb-6 flex items-center gap-4 sticky top-0 bg-dark-bg/95 backdrop-blur-md z-40 border-b border-white/5">
+            <header className="px-6 pt-12 pb-6 relative flex items-center justify-center bg-dark-bg/95 backdrop-blur-md z-40 border-b border-white/5">
                 <button
                     onClick={onBack}
-                    className="w-10 h-10 rounded-full bg-dark-card border border-white/10 flex items-center justify-center text-primary active:scale-90 transition-all"
+                    className="absolute left-6 w-10 h-10 rounded-full bg-dark-card border border-white/10 flex items-center justify-center text-primary active:scale-90 transition-all"
                 >
                     <span className="material-icons-round">arrow_back_ios_new</span>
                 </button>
-                <div>
+                <div className="text-center">
                     <h1 className="text-xl font-black">{loading ? 'Carregando...' : doc?.title}</h1>
                     <p className="text-[9px] text-dark-text-secondary uppercase tracking-widest font-bold">Documento Oficial OE BURGUERS</p>
                 </div>
