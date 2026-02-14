@@ -56,23 +56,25 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin, onViewLegal }
               <span>Peça seu Lanche</span>
               <span className="material-icons-round group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </button>
-
-            <p className="text-[10px] text-white/40 max-w-[280px] mx-auto leading-tight">
-              Ao clicar em Peça seu Lanche, você aceita nossos{' '}
-              <button onClick={() => onViewLegal('terms-of-use')} className="text-primary font-black uppercase tracking-widest hover:underline">Termos</button> e{' '}
-              <button onClick={() => onViewLegal('privacy-policy')} className="text-primary font-black uppercase tracking-widest hover:underline">Privacidade</button>.
-            </p>
           </div>
         </div>
 
-        <div className="pt-4 flex items-center justify-center gap-2">
-          <div className="flex -space-x-2">
-            {[1, 2, 3, 4].map(i => (
-              <img key={i} src={`https://i.pravatar.cc/100?u=${i}`} className="w-6 h-6 rounded-full border border-dark-bg" alt="User" />
-            ))}
+        <div className="pt-4 flex flex-col items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex -space-x-2">
+              {[1, 2, 3, 4].map(i => (
+                <img key={i} src={`https://i.pravatar.cc/100?u=${i}`} className="w-6 h-6 rounded-full border border-dark-bg" alt="User" />
+              ))}
+            </div>
+            <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest">
+              +5.000 clientes satisfeitos
+            </p>
           </div>
-          <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest">
-            +5.000 clientes satisfeitos
+
+          <p className="text-[10px] text-white/40 max-w-[280px] mx-auto leading-tight">
+            Ao clicar em Peça seu Lanche, você aceita nossos{' '}
+            <button onClick={() => onViewLegal('terms-of-use')} className="text-primary font-black uppercase tracking-widest hover:underline">Termos</button> e{' '}
+            <button onClick={() => onViewLegal('privacy-policy')} className="text-primary font-black uppercase tracking-widest hover:underline">Privacidade</button>.
           </p>
         </div>
       </div>
