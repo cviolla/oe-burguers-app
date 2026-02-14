@@ -4,9 +4,10 @@ import React from 'react';
 interface OnboardingProps {
   onStart: () => void;
   onLogin: () => void;
+  onViewLegal: (slug: 'privacy-policy' | 'terms-of-use') => void;
 }
 
-const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin }) => {
+const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin, onViewLegal }) => {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Background Image with optimized quality */}
@@ -46,15 +47,22 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin }) => {
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <button
-            onClick={onStart}
-            className="w-full max-w-[300px] mx-auto bg-primary py-[1.125rem] rounded-full text-dark-bg font-black text-lg shadow-2xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 group"
-          >
-            <span>Peça seu Lanche</span>
-            <span className="material-icons-round group-hover:translate-x-1 transition-transform">arrow_forward</span>
-          </button>
+        <div className="flex flex-col gap-6">
+          <div className="space-y-4">
+            <button
+              onClick={onStart}
+              className="w-full max-w-[300px] mx-auto bg-primary py-[1.125rem] rounded-full text-dark-bg font-black text-lg shadow-2xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 group"
+            >
+              <span>Peça seu Lanche</span>
+              <span className="material-icons-round group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </button>
 
+            <p className="text-[10px] text-white/40 max-w-[280px] mx-auto leading-tight">
+              Ao clicar em Peça seu Lanche, você aceita nossos{' '}
+              <button onClick={() => onViewLegal('terms-of-use')} className="text-primary font-black uppercase tracking-widest hover:underline">Termos</button> e{' '}
+              <button onClick={() => onViewLegal('privacy-policy')} className="text-primary font-black uppercase tracking-widest hover:underline">Privacidade</button>.
+            </p>
+          </div>
         </div>
 
         <div className="pt-4 flex items-center justify-center gap-2">

@@ -50,4 +50,4 @@ export interface DeliveryFee {
   fee_cents: number;
 }
 
-export type AppView = 'home' | 'menu' | 'coupons' | 'cart' | 'checkout' | 'profile' | 'notifications' | 'payment_methods' | 'product_detail' | 'receipt' | 'rating' | 'settings' | 'order_history' | 'addresses' | 'scheduling' | 'onboarding' | 'login' | 'register' | 'legal' | 'editor' | 'store_info';
+export type AppView = 'home' | 'menu' | 'coupons' | 'cart' | 'checkout' | 'profile' | 'notifications' | 'payment_methods' | 'product_detail' | 'receipt' | 'rating' | 'settings' | 'order_history' | 'addresses' | 'scheduling' | 'onboarding' | 'login' | 'legal' | 'editor' | 'store_info';

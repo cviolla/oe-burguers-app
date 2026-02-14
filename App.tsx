@@ -20,7 +20,6 @@ import PaymentMethods from './pages/PaymentMethods';
 import Settings from './pages/Settings';
 import Onboarding from './pages/Onboarding';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Navbar from './components/Navbar';
 import Legal from './pages/Legal';
 import Editor from './pages/Editor';
@@ -159,13 +158,9 @@ const App: React.FC = () => {
     if (currentView === 'editor') return;
 
     if (isOpen) {
-      // Se a loja está aberta e o usuário está na store_info, manda para registro se n estiver cadastrado, ou home
+      // Se a loja está aberta e o usuário está na store_info, manda para home
       if (currentView === 'store_info') {
-        if (!userName || userName === 'Andres') {
-          setCurrentView('register');
-        } else {
-          setCurrentView('home');
-        }
+        setCurrentView('home');
       }
     } else {
       // Se a loja está fechada, redireciona para store_info apenas se o usuário tentar ir para o checkout ou agendamento
@@ -238,7 +233,6 @@ const App: React.FC = () => {
       case 'order_history':
         setCurrentView('profile');
         break;
-      case 'register':
       case 'login':
         setCurrentView('onboarding');
         break;
@@ -293,7 +287,7 @@ const App: React.FC = () => {
   const handleGlobalForward = () => {
     switch (currentView) {
       case 'onboarding':
-        setCurrentView('register');
+        setCurrentView('home');
         break;
       case 'cart':
         if (cart.length > 0) setCurrentView('checkout');
@@ -606,26 +600,15 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
         return <Onboarding onStart={() => {
           if (!isOpen) {
             setCurrentView('store_info');
-          } else if (!userName || userName === 'Andres') {
-            setCurrentView('register');
           } else {
             setCurrentView('home');
           }
-        }} onLogin={() => setCurrentView('login')} />;
-      case 'login':
-        return <Login onBack={() => setCurrentView('onboarding')} onLogin={() => setCurrentView('home')} onResetPassword={() => { }} />;
-      case 'register':
-        return <Register onBack={() => setCurrentView('onboarding')} onRegister={(name, phone) => {
-          setUserName(name);
-          setUserPhone(phone);
-          localStorage.setItem('oe_user_name', name);
-          localStorage.setItem('oe_user_phone', phone);
-          recoverUserData(phone); // Recover history from DB
-          setCurrentView('home');
         }} onLogin={() => setCurrentView('login')} onViewLegal={(slug) => {
           setLegalDoc(slug);
           setCurrentView('legal');
         }} />;
+      case 'login':
+        return <Login onBack={() => setCurrentView('onboarding')} onLogin={() => setCurrentView('home')} onResetPassword={() => { }} />;
       case 'home':
         return (
           <Home
@@ -674,11 +657,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
               }
             }}
             onContinue={() => {
-              if (isOpen && (!userName || userName === 'Andres')) {
-                setCurrentView('register');
-              } else {
-                setCurrentView('home');
-              }
+              setCurrentView('home');
             }}
           />
         );
