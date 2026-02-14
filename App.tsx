@@ -53,28 +53,7 @@ const App: React.FC = () => {
   const [addresses, setAddresses] = useState<any[]>(() => {
     const saved = localStorage.getItem('oe_addresses');
     if (saved) return JSON.parse(saved);
-    return [
-      {
-        id: '1',
-        label: 'Casa',
-        street: 'Avenida Paulista',
-        number: '1578',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        isDefault: true
-      },
-
-      {
-        id: '2',
-        label: 'Trabalho',
-        street: 'Rua Haddock Lobo',
-        number: '595',
-        neighborhood: 'Cerqueira César',
-        city: 'São Paulo',
-        isDefault: false
-      }
-
-    ];
+    return [];
   });
 
   useEffect(() => {
@@ -118,7 +97,14 @@ const App: React.FC = () => {
       setUserName('');
     }
 
-    // Sincronizar estado inicial com o histórico
+    // Limpar endereços de teste do localStorage
+    const cachedAddresses = localStorage.getItem('oe_addresses');
+    if (cachedAddresses && (cachedAddresses.includes('Avenida Paulista') || cachedAddresses.includes('Haddock Lobo'))) {
+      localStorage.removeItem('oe_addresses');
+      localStorage.removeItem('oe_saved_address');
+      setAddresses([]);
+      setSavedAddress(null);
+    }
     window.history.replaceState({ view: currentView }, '');
 
     const handlePopState = (event: PopStateEvent) => {
