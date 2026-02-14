@@ -197,6 +197,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     const fileInputRef = useRef<HTMLInputElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [hasInteracted, setHasInteracted] = useState(false);
+    const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
 
     useEffect(() => {
         audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -220,15 +221,13 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     useEffect(() => {
         if (!hasInteracted || !audioRef.current) return;
 
-        const hasPendingOrders = orders.some(o => o.status === 'pendente');
-
-        if (hasPendingOrders) {
+        if (newOrderAlert) {
             audioRef.current.play().catch(console.error);
         } else {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
         }
-    }, [orders, hasInteracted]);
+    }, [newOrderAlert, hasInteracted]);
 
     useEffect(() => {
         fetchCategories();
@@ -239,6 +238,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             .channel('admin_dashboard_v2')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
                 if (payload.eventType === 'INSERT') {
+                    setNewOrderAlert(payload.new);
                     // Notificação do Navegador
                     if (Notification.permission === 'granted') {
                         new Notification('🍔 Novo Pedido!', {
@@ -246,11 +246,6 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             icon: '/logo.png',
                             badge: '/favicon-site.png'
                         });
-                    }
-
-                    // Forçar o som de alerta a tocar imediatamente se houver interação
-                    if (hasInteracted && audioRef.current) {
-                        audioRef.current.play().catch(console.error);
                     }
                 }
                 fetchOrders();
@@ -1743,6 +1738,27 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     return (
         <div className="min-h-screen bg-dark-bg flex flex-col md:flex-row text-white">
+            {/* Notificação Flutuante de Novo Pedido */}
+            {newOrderAlert && (
+                <div
+                    onClick={() => {
+                        setNewOrderAlert(null);
+                        setActiveTab('pdv');
+                    }}
+                    className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm bg-primary p-5 rounded-[2rem] shadow-[0_20px_60px_rgba(255,173,0,0.4)] flex items-center gap-4 cursor-pointer animate-pulse-alert"
+                >
+                    <div className="w-12 h-12 bg-dark-bg rounded-2xl flex items-center justify-center text-primary shadow-inner">
+                        <span className="material-icons-round text-2xl">restaurant</span>
+                    </div>
+                    <div className="flex-1">
+                        <h4 className="text-dark-bg font-black text-[13px] uppercase leading-none mb-1">Novo Pedido Recebido!</h4>
+                        <p className="text-dark-bg/60 font-bold text-[11px] uppercase tracking-tighter">
+                            {newOrderAlert.client_name} • {new Date(newOrderAlert.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                    </div>
+                    <span className="material-icons-round text-dark-bg/30">chevron_right</span>
+                </div>
+            )}
             {/* Super Header (Mobile only) */}
             <header className="px-6 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-dark-bg/80 backdrop-blur-2xl z-50 border-b border-white/5 md:hidden">
                 <div className="flex items-center gap-4">

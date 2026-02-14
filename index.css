@@ -190,3 +190,24 @@ textarea {
     opacity: 0;
     animation: crown-drop 2.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s forwards;
 }
+
+@keyframes pulse-alert {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 173, 0, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 15px rgba(255, 173, 0, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 173, 0, 0);
+    }
+}
+
+.animate-pulse-alert {
+    animation: pulse-alert 1.5s infinite;
+}

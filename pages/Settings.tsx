@@ -138,7 +138,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, onUpd
             Excluir Conta
           </button>
           <p className="text-[8px] text-dark-text-secondary uppercase tracking-[0.3em]">
-            • DESENVOLVIDO POR <a href="https://wa.me/5521965226788" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline transition-all">@cviolla</a>
+            • DESENVOLVIDO POR <a href="https://wa.me/5521972724360" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline transition-all">@cviolla</a>
           </p>
         </div>
       </main>

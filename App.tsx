@@ -539,7 +539,7 @@ const App: React.FC = () => {
       if (itemsError) throw itemsError;
 
       // WhatsApp Message Generation
-      const storeWhatsApp = "5521965226788";
+      const storeWhatsApp = "5521972724360";
       const now = new Date();
       const dateStr = now.toLocaleDateString('pt-BR');
       const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
