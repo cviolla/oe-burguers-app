@@ -1,0 +1,321 @@
+
+import React from 'react';
+import { supabase } from '../supabase';
+
+interface ProfileProps {
+  onBack: () => void;
+  onSettings: () => void;
+  onHistory: () => void;
+  onAddresses?: () => void;
+  onNavigate: (view: any) => void;
+  onAdmin: () => void;
+  userName: string;
+  userPhone: string;
+  preferredPayment?: string;
+  savedAddress?: any;
+  isAdmin?: boolean;
+}
+
+const Profile: React.FC<ProfileProps> = ({
+  onBack,
+  onSettings,
+  onHistory,
+  onAddresses,
+  onNavigate,
+  onAdmin,
+  userName,
+  userPhone,
+  preferredPayment,
+  savedAddress,
+  isAdmin
+}) => {
+  const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [authError, setAuthError] = React.useState(false);
+  const [isAuthenticating, setIsAuthenticating] = React.useState(false);
+
+  const handleAdminLogin = async () => {
+    setIsAuthenticating(true);
+    setAuthError(false);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        setAuthError(true);
+      } else if (data.session) {
+        onAdmin();
+        setShowAuthModal(false);
+        setPassword('');
+        setEmail('');
+      }
+    } catch (err) {
+      setAuthError(true);
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const lastOrders: any[] = [];
+
+  return (
+    <div className="pb-32">
+      <header className="px-6 pt-10 pb-4 flex items-center justify-between sticky top-0 bg-dark-bg/80 backdrop-blur-md z-40">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white text-xl font-black shadow-xl shadow-primary/30">
+            {userName.charAt(0).toUpperCase() || 'U'}
+          </div>
+          <div>
+            <h1 className="text-xl font-black">{userName || 'Usuário'}</h1>
+            <p className="text-xs text-dark-text-secondary">{userPhone || 'Sem telefone cadastrado'}</p>
+          </div>
+        </div>
+        <button
+          onClick={onSettings}
+          className="w-10 h-10 rounded-full bg-dark-card border border-white/10 flex items-center justify-center text-dark-text-secondary active:scale-95 transition-all shadow-lg"
+        >
+          <span className="material-icons-round">settings</span>
+        </button>
+      </header>
+
+      <main className="px-6 space-y-5">
+        {/* Stats */}
+        <div className="grid grid-cols-1 gap-3">
+          <div className="bg-dark-card py-3 px-6 rounded-[1.5rem] border border-white/5 shadow-lg flex items-center justify-between">
+            <div className="text-left">
+              <span className="text-[10px] font-black uppercase text-dark-text-secondary tracking-widest block">Total de Pedidos</span>
+              <span className="text-primary text-2xl font-black block leading-none mt-1">0</span>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <span className="material-icons-round text-xl">shopping_bag</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Resumo Histórico */}
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-black uppercase tracking-tight text-white/40">Resumo de Pedidos</h3>
+            <button
+              onClick={onHistory}
+              className="text-primary text-xs font-bold uppercase cursor-pointer hover:underline"
+            >
+              Ver Todos
+            </button>
+          </div>
+          <div className="space-y-3">
+            {lastOrders.length === 0 ? (
+              <div className="bg-dark-card p-6 rounded-2xl border border-white/5 border-dashed flex flex-col items-center justify-center text-center">
+                <span className="material-icons-round text-white/5 text-3xl mb-2">history</span>
+                <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest">Sem pedidos</p>
+              </div>
+            ) : (
+              [1, 2].map(i => (
+                <div key={i} className="bg-dark-card p-4 rounded-3xl border border-white/5 shadow-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-primary">
+                        <span className="material-icons-round">lunch_dining</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm">Pedido #894{i}</h4>
+                        <p className="text-[10px] text-dark-text-secondary">{i === 1 ? 'Hoje às 19:45' : 'Ontem às 21:20'}</p>
+                      </div>
+                    </div>
+                    <span className="bg-green-500/10 text-green-400 text-[8px] font-black px-2 py-1 rounded uppercase">Entregue</span>
+                  </div>
+                  <div className="border-t border-white/5 py-3 mb-3">
+                    <p className="text-[10px] text-dark-text-secondary leading-relaxed">
+                      1x Super OE Bacon Duplo, 1x Batata M, 1x Coca-Cola Zero
+                    </p>
+                    <p className="text-sm font-black mt-1">R$ 42,90</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="flex-1 bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-primary/20">Repetir Pedido</button>
+                    <button className="px-5 border border-white/10 text-dark-text-secondary py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Ajuda</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Últimos Pedidos - Lista Rápida */}
+        <section>
+          <h3 className="text-sm font-black uppercase tracking-tight text-white/40 mb-2">Pedidos Recentes</h3>
+          {lastOrders.length === 0 ? (
+            <div className="bg-dark-card/50 p-6 rounded-2xl border border-white/5 text-center flex flex-col items-center justify-center">
+              <span className="material-icons-round text-white/5 text-3xl mb-2">receipt_long</span>
+              <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">Lista vazia</p>
+            </div>
+          ) : (
+            <div className="bg-dark-card rounded-3xl border border-white/5 overflow-hidden shadow-xl">
+              {lastOrders.map((order, idx) => (
+                <div key={order.id} className={`p-4 flex items-center justify-between ${idx !== lastOrders.length - 1 ? 'border-b border-white/5' : ''}`}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-dark-bg flex items-center justify-center border border-white/5 text-primary">
+                      <span className="material-icons-round text-lg">receipt_long</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">{order.item}</h4>
+                      <p className="text-[10px] text-dark-text-secondary">{order.date} • {order.id}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-black text-white">R$ {order.total}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+
+        {/* Menu Options */}
+        <section className="space-y-3">
+          <h3 className="text-sm font-black uppercase tracking-tight text-white/40 px-1">Dados Salvos</h3>
+          <div className="space-y-2">
+            <div
+              onClick={() => onNavigate('payment_methods')}
+              className="bg-dark-card py-3.5 px-5 rounded-2xl flex items-center justify-between border border-white/5 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                <span className="material-icons-round text-primary">credit_card</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-bold block leading-tight">Método de Pagamento</span>
+                  <span className="text-[10px] text-dark-text-secondary uppercase tracking-widest block leading-tight">{preferredPayment || 'Não definido'}</span>
+                </div>
+              </div>
+              <span className="material-icons-round text-dark-text-secondary">chevron_right</span>
+            </div>
+
+            <div
+              onClick={onAddresses}
+              className="bg-dark-card py-3.5 px-5 rounded-2xl flex items-center justify-between border border-white/5 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                <span className="material-icons-round text-primary">place</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-bold block leading-tight">Último Endereço</span>
+                  <span className="text-[10px] text-dark-text-secondary uppercase tracking-widest truncate block leading-tight">
+                    {savedAddress ? `${savedAddress.street}, ${savedAddress.number}` : 'Nenhum endereço salvo'}
+                  </span>
+                </div>
+              </div>
+              <span className="material-icons-round text-dark-text-secondary">chevron_right</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Modo Editor Section */}
+        <section className="space-y-3">
+          <h3 className="text-sm font-black uppercase tracking-tight text-white/40 px-1 flex items-center gap-2">
+            <span className="material-icons-round text-sm">shield</span>
+            Administração
+          </h3>
+          <div className="space-y-2">
+            <div
+              onClick={() => {
+                if (isAdmin) {
+                  onAdmin();
+                } else {
+                  setShowAuthModal(true);
+                }
+              }}
+              className="bg-primary/5 py-3.5 px-5 rounded-2xl flex items-center justify-between border border-primary/20 active:scale-[0.98] transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <span className="material-icons-round text-xl">admin_panel_settings</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-bold block text-primary leading-tight">Modo Admin</span>
+                  <span className="text-[10px] text-dark-text-secondary uppercase tracking-widest block leading-tight">Configurações da loja</span>
+                </div>
+              </div>
+              <span className="material-icons-round text-primary/40 group-hover:translate-x-1 transition-transform">chevron_right</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Admin Auth Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-[100] bg-[#130707]/90 backdrop-blur-xl flex items-center justify-center p-6">
+          <div className="w-full max-w-xs bg-[#1C0D0D] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-4">
+                <span className="material-icons-round text-3xl">lock</span>
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight">Área Restrita</h3>
+              <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest text-center">Digite a senha administrativa</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-dark-text-secondary font-black uppercase tracking-widest ml-1">E-mail</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-dark-bg border border-white/5 rounded-xl py-4 px-6 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-dark-text-secondary/20 font-bold"
+                    placeholder="admin@oeburguers.com.br"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-dark-text-secondary font-black uppercase tracking-widest ml-1">Senha</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setAuthError(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAdminLogin();
+                    }}
+                    className={`w-full bg-dark-bg border ${authError ? 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'border-white/5'} rounded-xl py-4 px-6 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-dark-text-secondary/20 font-black tracking-[0.3em]`}
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                {authError && (
+                  <p className="text-rose-500 text-[8px] font-black uppercase tracking-widest text-center mt-2 animate-pulse">Credenciais Inválidas</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleAdminLogin}
+                  disabled={isAuthenticating}
+                  className="w-full bg-primary py-4 rounded-xl text-dark-bg font-black uppercase tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  {isAuthenticating && <span className="material-icons-round animate-spin text-sm">refresh</span>}
+                  {isAuthenticating ? 'Autenticando...' : 'Entrar'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    setPassword('');
+                    setEmail('');
+                    setAuthError(false);
+                  }}
+                  className="w-full py-4 text-white/30 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default Profile;

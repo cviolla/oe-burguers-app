@@ -1,0 +1,7 @@
+{
+  "name": "OE BURGUERS App",
+  "description": "Uma experiência completa de delivery de hambúrgueres artesanais com menu digital, cupons, acompanhamento em tempo real e gestão de produtos.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

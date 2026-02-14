@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OE BURGUERS - App</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FFAD00',
+                        secondary: '#750D10',
+                        'dark-bg': '#130707',
+                        'dark-card': '#1C0D0D',
+                        'dark-border': '#3D1416',
+                        'dark-text-primary': '#FFFFFF',
+                        'dark-text-secondary': '#B0A0A0',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-dark-bg text-dark-text-primary antialiased;
+                -webkit-tap-highlight-color: transparent;
+            }
+            /* Safari backdrop-filter fix */
+            .backdrop-blur-sm { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+            .backdrop-blur { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+            .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+            .backdrop-blur-lg { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+            .backdrop-blur-xl { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+            .backdrop-blur-2xl { backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+            .backdrop-blur-3xl { backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); }
+
+            input, textarea, select {
+                @apply appearance-none;
+            }
+        }
+        @layer utilities {
+            .min-h-ios {
+                min-height: 100vh;
+                min-height: 100dvh;
+            }
+        }
+        @layer components {
+            .ios-blur {
+                @apply backdrop-blur-md bg-opacity-80;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+            }
+            .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            .coupon-cutout {
+                position: relative;
+            }
+            .coupon-cutout::before, .coupon-cutout::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                width: 20px;
+                height: 20px;
+                background-color: #0A0F14;
+                border-radius: 50%;
+                transform: translateY(-50%);
+                z-index: 10;
+            }
+            .coupon-cutout::before { left: -10px; }
+            .coupon-cutout::after { right: -10px; }
+        }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+    <link rel="stylesheet" href="/index.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
