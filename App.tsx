@@ -717,6 +717,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onHistory={() => setCurrentView('order_history')}
             onAddresses={() => setCurrentView('addresses')}
             onNavigate={setCurrentView}
+            onAdmin={() => setCurrentView('editor')}
             isAdmin={!!session}
             deferredPrompt={deferredPrompt}
             onPromptUsed={() => setDeferredPrompt(null)}
