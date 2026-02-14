@@ -122,7 +122,7 @@ const Home: React.FC<HomeProps> = ({ userName, products, onProductClick, onLogou
         <header className="px-6 pt-10 pb-4 flex items-center justify-between">
           <div>
             <span className="text-[10px] text-primary font-black uppercase tracking-[0.4em] block mb-1">OE BURGUERS</span>
-            <h1 className="text-2xl font-black tracking-tight text-white leading-none">Olá, {userName}!</h1>
+            <h1 className="text-2xl font-black tracking-tight text-white leading-none">Olá, {userName}</h1>
 
 
             <a

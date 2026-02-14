@@ -59,6 +59,10 @@ const Checkout: React.FC<CheckoutProps> = ({
     f.neighborhood.trim().toLowerCase() === (formData?.neighborhood || '').trim().toLowerCase()
   );
 
+  const hasPossibleMatch = formData.neighborhood.trim().length > 0 && deliveryFees.some(f =>
+    f.neighborhood.trim().toLowerCase().includes(formData.neighborhood.trim().toLowerCase())
+  );
+
   const deliveryFee = scheduledTime ? 0 : (neighborhoodFee ? neighborhoodFee.fee_cents / 100 : (subtotal > 50 ? 0 : 7.00));
   const total = subtotal + deliveryFee;
 
@@ -220,8 +224,16 @@ const Checkout: React.FC<CheckoutProps> = ({
                     <option key={fee.id} value={fee.neighborhood} />
                   ))}
                 </datalist>
-                {formData.neighborhood && !neighborhoodFee && (
+                {formData.neighborhood && !hasPossibleMatch && (
                   <p className="text-[9px] text-rose-500 font-black uppercase ml-1 tracking-widest animate-pulse">Ops! Ainda não entregamos nesta região.</p>
+                )}
+                {formData.neighborhood && hasPossibleMatch && !neighborhoodFee && (
+                  <div className="flex items-center gap-1.5 ml-1 mt-1">
+                    <span className="material-symbols-outlined text-[12px] text-primary animate-pulse">verified</span>
+                    <p className="text-[9px] text-primary font-black uppercase tracking-widest">
+                      Identificamos cobertura! Continue digitando...
+                    </p>
+                  </div>
                 )}
                 {neighborhoodFee && (
                   <div className="flex items-center gap-1.5 ml-1 mt-1">
