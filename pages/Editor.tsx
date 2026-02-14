@@ -981,7 +981,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const renderTabs = () => (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm md:static md:translate-x-0 md:w-64 md:h-screen md:max-w-none md:bottom-0 md:left-0 transition-all duration-500">
-            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-2xl border border-white/10 rounded-full p-2 lg:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:rounded-none md:justify-start md:gap-4 md:pt-12 md:px-4">
+            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-2xl border border-white/10 rounded-full p-2 lg:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:rounded-none md:justify-start md:gap-4 md:pt-12 md:px-4 md:overflow-y-auto custom-scrollbar">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] md:hidden"></div>
 
                 {/* Desktop Logo Placeholder */}
