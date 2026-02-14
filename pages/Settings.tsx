@@ -7,9 +7,10 @@ interface SettingsProps {
   userName: string;
   onUpdateName: (name: string) => void;
   onViewLegal: (slug: 'privacy-policy' | 'terms-of-use') => void;
+  onDeleteAccount: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, onUpdateName, onViewLegal }) => {
+const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, onUpdateName, onViewLegal, onDeleteAccount }) => {
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('oe_notifications');
     return saved ? JSON.parse(saved) : { push: true };
@@ -58,7 +59,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, onUpd
 
   const handleDeleteAccount = () => {
     if (confirm('Tem certeza que deseja excluir sua conta definitivamente? Esta ação não pode ser desfeita.')) {
-      alert('Sua solicitação foi enviada. Nossa equipe entrará em contato para confirmar a exclusão.');
+      onDeleteAccount();
     }
   };
 
@@ -138,7 +139,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, onUpd
             Excluir Conta
           </button>
           <p className="text-[8px] text-dark-text-secondary uppercase tracking-[0.3em]">
-            • DESENVOLVIDO POR <a href="https://wa.me/5521972724360" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline transition-all">@cviolla</a>
+            • DESENVOLVIDO POR <a href="https://wa.me/5521965226788" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline transition-all">@cviolla</a>
           </p>
         </div>
       </main>

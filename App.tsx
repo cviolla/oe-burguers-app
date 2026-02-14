@@ -742,6 +742,21 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
               setLegalDoc(slug);
               setCurrentView('legal');
             }}
+            onDeleteAccount={() => {
+              localStorage.removeItem('oe_user_name');
+              localStorage.removeItem('oe_user_phone');
+              localStorage.removeItem('oe_preferred_payment');
+              localStorage.removeItem('oe_saved_address');
+              localStorage.removeItem('oe_cart');
+              localStorage.removeItem('oe_addresses');
+              setUserName('');
+              setUserPhone('');
+              setPreferredPayment('pix');
+              setSavedAddress(null);
+              setCart([]);
+              setAddresses([]);
+              setCurrentView('onboarding');
+            }}
           />
         );
       case 'notifications':
