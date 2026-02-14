@@ -36,7 +36,7 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [lastCompletedCart, setLastCompletedCart] = useState<CartItem[]>([]);
   const [scheduledTime, setScheduledTime] = useState<ScheduledTime | null>(null);
-  const [userName, setUserName] = useState<string>(() => localStorage.getItem('oe_user_name') || 'Andres');
+  const [userName, setUserName] = useState<string>(() => localStorage.getItem('oe_user_name') || '');
   const [userPhone, setUserPhone] = useState<string>(() => localStorage.getItem('oe_user_phone') || '');
   const [preferredPayment, setPreferredPayment] = useState<string>(() => localStorage.getItem('oe_preferred_payment') || 'pix');
   const [savedAddress, setSavedAddress] = useState<any>(() => {
@@ -110,6 +110,13 @@ const App: React.FC = () => {
     fetchDeliveryFees();
     fetchAddons();
     fetchStoreStatus();
+
+    // Limpar nomes de teste do localStorage se existirem
+    const cachedName = localStorage.getItem('oe_user_name');
+    if (cachedName === 'Andres' || cachedName === 'andres') {
+      localStorage.removeItem('oe_user_name');
+      setUserName('');
+    }
 
     // Sincronizar estado inicial com o histórico
     window.history.replaceState({ view: currentView }, '');
@@ -650,7 +657,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
           <StoreInfo
             isOpen={isOpen}
             onBack={() => {
-              if (!userName || userName === 'Andres') { // Se não está 'logado' ou nome padrão
+              if (!userName) { // Se não tem nome definido
                 setCurrentView('onboarding');
               } else {
                 setCurrentView('home');
