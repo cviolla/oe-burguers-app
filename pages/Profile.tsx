@@ -224,7 +224,7 @@ const Profile: React.FC<ProfileProps> = ({
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-primary">Instalar OE Burguer's</h4>
-                  <p className="text-[10px] text-dark-text-secondary uppercase font-black tracking-widest leading-tight">Para acesso rápido e offline</p>
+                  <p className="text-[10px] text-dark-text-secondary uppercase font-black tracking-widest leading-tight">Para acesso rápido</p>
                 </div>
               </div>
 
@@ -289,15 +289,14 @@ const Profile: React.FC<ProfileProps> = ({
                   setShowAuthModal(true);
                 }
               }}
-              className="bg-primary/5 py-3.5 px-5 rounded-2xl flex items-center justify-between border border-primary/20 active:scale-[0.98] transition-all cursor-pointer group"
+              className="bg-primary/5 py-2.5 px-4 rounded-2xl flex items-center justify-between border border-primary/20 active:scale-[0.98] transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-xl">admin_panel_settings</span>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <span className="material-icons-round text-lg">admin_panel_settings</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-bold block text-primary leading-tight">Modo Admin</span>
-                  <span className="text-[10px] text-dark-text-secondary uppercase tracking-widest block leading-tight">Configurações da loja</span>
                 </div>
               </div>
               <span className="material-icons-round text-primary/40 group-hover:translate-x-1 transition-transform">chevron_right</span>
