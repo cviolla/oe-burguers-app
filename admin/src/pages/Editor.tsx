@@ -159,15 +159,16 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleAddDeliveryFee = async () => {
-        if (!newNeighborhood || !newFee) return;
+        if (loading || !newNeighborhood.trim() || !newFee) return;
         setLoading(true);
         try {
+            const neighborhoodTrimmed = newNeighborhood.trim();
             const feeCents = Math.round(Number(newFee.replace(/\D/g, "")));
 
             const { error } = await supabase
                 .from('delivery_fees')
                 .insert({
-                    neighborhood: newNeighborhood,
+                    neighborhood: neighborhoodTrimmed,
                     fee_cents: feeCents,
                     is_active: true
                 });
@@ -186,23 +187,27 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleToggleFeeActive = async (id: string, currentStatus: boolean) => {
+        if (loading) return;
+        setLoading(true);
         const { error } = await supabase
             .from('delivery_fees')
             .update({ is_active: !currentStatus })
             .eq('id', id);
+        setLoading(false);
         if (!error) onRefresh();
     };
 
     const handleUpdateDeliveryFee = async () => {
-        if (!editingFee) return;
+        if (loading || !editingFee) return;
         setLoading(true);
         try {
+            const neighborhoodTrimmed = editingFee.neighborhood.trim();
             const feeCents = Math.round(Number(editingFee.displayFee.replace(/\D/g, "")));
 
             const { error } = await supabase
                 .from('delivery_fees')
                 .update({
-                    neighborhood: editingFee.neighborhood,
+                    neighborhood: neighborhoodTrimmed,
                     fee_cents: feeCents
                 })
                 .eq('id', editingFee.id);
@@ -220,6 +225,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleDeleteDeliveryFee = async (id: string) => {
+        if (loading) return;
         const confirmed = await showConfirm?.(
             'Excluir Taxa',
             'Deseja excluir DEFINITIVAMENTE esta taxa de entrega?',
@@ -228,10 +234,18 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             'delete_forever'
         );
         if (!confirmed) return;
+
+        setLoading(true);
         const { error } = await supabase
             .from('delivery_fees')
             .delete()
             .eq('id', id);
+
+        if (error) {
+            showAlert?.('Erro', 'Não foi possível excluir a taxa: ' + error.message, 'error_outline');
+        }
+
+        setLoading(false);
         if (!error) onRefresh();
     };
 
@@ -324,15 +338,25 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
 
     const updateOrderStatus = async (orderId: string, status: Order['status'], paymentStatus?: Order['payment_status']) => {
-        const updates: any = { status };
-        if (paymentStatus) updates.payment_status = paymentStatus;
+        if (loading) return;
+        setLoading(true);
+        try {
+            const updates: any = { status };
+            if (paymentStatus) updates.payment_status = paymentStatus;
 
-        const { error } = await supabase
-            .from('orders')
-            .update(updates)
-            .eq('id', orderId);
+            const { error } = await supabase
+                .from('orders')
+                .update(updates)
+                .eq('id', orderId);
 
-        if (!error) fetchOrders();
+            if (error) throw error;
+            fetchOrders();
+        } catch (error: any) {
+            console.error('Erro ao atualizar status do pedido:', error);
+            showAlert?.('Erro', 'Não foi possível atualizar o pedido: ' + (error.message || 'Erro desconhecido'), 'error_outline');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const deleteOrderPermanently = async (orderId: string) => {
@@ -354,6 +378,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleToggleActive = async (id: string, currentStatus: boolean) => {
+        if (loading) return;
         setLoading(true);
         try {
             const { error } = await supabase
@@ -540,13 +565,13 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const handleUpdateClient = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingClient) return;
+        if (loading || !editingClient) return;
         setLoading(true);
         const { error } = await supabase
             .from('customers')
             .upsert({
-                phone: editingClient.phone,
-                name: editingClient.name,
+                phone: editingClient.phone.trim(),
+                name: editingClient.name.trim(),
                 is_archived: editingClient.is_archived || false
             });
 
@@ -560,14 +585,22 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleArchiveClient = async (phone: string, status: boolean) => {
+        if (loading) return;
+        setLoading(true);
         const { error } = await supabase
             .from('customers')
-            .upsert({ phone, is_archived: status });
+            .upsert({ phone: phone.trim(), is_archived: status });
+
+        if (error) {
+            showAlert?.('Erro', 'Não foi possível arquivar o cliente: ' + error.message, 'error_outline');
+        }
+
+        setLoading(false);
         if (!error) fetchCustomers();
     };
 
     const handleDeleteClient = async (phone: string) => {
-        if (!phone || phone === 'sem-telefone') return;
+        if (loading || !phone || phone === 'sem-telefone') return;
         const confirmed = await showConfirm?.(
             'Excluir Cliente',
             'Deseja excluir DEFINITIVAMENTE os dados deste cliente da base administrativa? (Os pedidos não serão excluídos)',
@@ -576,21 +609,29 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             'person_remove'
         );
         if (!confirmed) return;
+
+        setLoading(true);
         const { error } = await supabase
             .from('customers')
             .delete()
             .eq('phone', phone);
+
+        if (error) {
+            showAlert?.('Erro', 'Não foi possível excluir o cliente: ' + error.message, 'error_outline');
+        }
+
+        setLoading(false);
         if (!error) fetchCustomers();
     };
 
     const handleCreateClient = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newClient.name || !newClient.phone) return;
+        if (loading || !newClient.name.trim() || !newClient.phone.trim()) return;
         setLoading(true);
         const { error } = await supabase
             .from('customers')
             .insert({
-                name: newClient.name,
+                name: newClient.name.trim(),
                 phone: newClient.phone.replace(/\D/g, ''),
                 is_archived: false
             });
@@ -646,13 +687,16 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         const priceCents = Math.round(Number(editingItem.displayPrice.replace(/\D/g, "")));
 
         try {
+            const nameTrimmed = editingItem.name.trim();
+            const descTrimmed = (editingItem.description || '').trim();
+
             if (editingItem.id) {
                 // Update existing
                 const { error: itemError } = await supabase
                     .from('items')
                     .update({
-                        name: editingItem.name,
-                        description: editingItem.description,
+                        name: nameTrimmed,
+                        description: descTrimmed,
                         image_url: editingItem.image,
                         category_id: editingItem.category_id,
                         is_active: editingItem.isActive !== false
@@ -672,8 +716,8 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 const { data: newItem, error: itemError } = await supabase
                     .from('items')
                     .insert({
-                        name: editingItem.name || 'Novo Produto',
-                        description: editingItem.description || '',
+                        name: nameTrimmed || 'Novo Produto',
+                        description: descTrimmed || '',
                         image_url: editingItem.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop',
                         category_id: editingItem.category_id || (categories.length > 0 ? categories[0].id : null),
                         price_cents: priceCents, // Some schemas use price_cents directly on items
@@ -710,6 +754,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleDeleteProduct = async (id: string) => {
+        if (loading) return;
         const confirmed = await showConfirm?.(
             'Excluir Produto',
             'Tem certeza que deseja excluir permanentemente este produto? Esta ação não pode ser desfeita.',
@@ -745,6 +790,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleToggleAddonActive = async (id: string, currentStatus: boolean) => {
+        if (loading) return;
         setLoading(true);
         try {
             const { error } = await supabase
@@ -767,6 +813,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handleUpdateStoreStatus = async (newStatus: 'auto' | 'open' | 'closed') => {
+        if (loading) return;
         const targetStatus = storeStatus === newStatus ? 'auto' : newStatus;
         setLoading(true);
         const { error } = await supabase
@@ -785,26 +832,31 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const handleUpdateAddon = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingAddon) return;
+        if (loading || !editingAddon) return;
         setLoading(true);
 
-        const priceCents = Math.round(Number(editingAddon.displayPrice.replace(/\D/g, "")));
+        try {
+            const nameTrimmed = editingAddon.name.trim();
+            const priceCents = Math.round(Number(editingAddon.displayPrice.replace(/\D/g, "")));
 
-        const { error } = await supabase
-            .from('options')
-            .update({
-                name: editingAddon.name,
-                price_delta_cents: priceCents
-            })
-            .eq('id', editingAddon.id);
+            const { error } = await supabase
+                .from('options')
+                .update({
+                    name: nameTrimmed,
+                    price_delta_cents: priceCents
+                })
+                .eq('id', editingAddon.id);
 
-        if (!error) {
+            if (error) throw error;
+
             setEditingAddon(null);
             onRefresh();
-        } else {
-            showAlert?.('Erro', 'Não foi possível atualizar o adicional: ' + error.message, 'error_outline');
+        } catch (error: any) {
+            console.error('Erro ao atualizar adicional:', error);
+            showAlert?.('Erro', 'Não foi possível atualizar o adicional: ' + (error.message || 'Erro desconhecido'), 'error_outline');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const startEditing = (product: any) => {
