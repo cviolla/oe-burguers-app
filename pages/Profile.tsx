@@ -12,8 +12,6 @@ interface ProfileProps {
   userPhone: string;
   preferredPayment?: string;
   savedAddress?: any;
-  deferredPrompt?: any;
-  onPromptUsed?: () => void;
   onUpdateName: (name: string) => void;
   onUpdatePhone: (phone: string) => void;
   showPrompt?: (title: string, message: string, defaultValue?: string, placeholder?: string, icon?: string) => Promise<string | null>;
@@ -32,8 +30,6 @@ const Profile: React.FC<ProfileProps> = ({
   userPhone,
   preferredPayment,
   savedAddress,
-  deferredPrompt,
-  onPromptUsed,
   onUpdateName,
   onUpdatePhone,
   showPrompt,
@@ -218,68 +214,7 @@ const Profile: React.FC<ProfileProps> = ({
 
 
 
-        {/* Instalação do App */}
-        {typeof window !== 'undefined' && !window.matchMedia('(display-mode: standalone)').matches && (
-          <section className="space-y-3">
-            <h3 className="text-sm font-black uppercase tracking-tight text-white/40 px-1">Aplicativo</h3>
-            <div className="bg-primary/5 border border-primary/10 rounded-[2rem] p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-xl">install_mobile</span>
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-primary">Instalar OE Burguer's</h4>
-                  <p className="text-[10px] text-dark-text-secondary uppercase font-black tracking-widest leading-tight">Para acesso rápido</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 border-t border-white/5 pt-4">
-                <div className="flex flex-col gap-2">
-                  <p className="text-[10px] text-white/60 font-black uppercase tracking-widest flex items-center gap-2">
-                    No iPhone (Safari)
-                    <span className="material-icons-round text-xs">apple</span>
-                  </p>
-                  <div className="flex items-start gap-2.5 bg-dark-bg/40 p-3 rounded-xl border border-white/5">
-                    <span className="material-icons-round text-primary text-sm shrink-0">ios_share</span>
-                    <p className="text-[11px] text-dark-text-secondary leading-normal">
-                      Toque no ícone de <span className="text-white font-bold">Compartilhar</span> na barra do Safari e selecione <span className="text-white font-bold">"Adicionar à Tela de Início"</span>.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 pt-1">
-                  <p className="text-[10px] text-white/60 font-black uppercase tracking-widest flex items-center gap-2">
-                    No Android (Chrome)
-                    <span className="material-icons-round text-xs font-normal">android</span>
-                  </p>
-                  <div className="flex items-start gap-2.5 bg-dark-bg/40 p-3 rounded-xl border border-white/5">
-                    <span className="material-icons-round text-primary text-sm shrink-0">more_vert</span>
-                    <p className="text-[11px] text-dark-text-secondary leading-normal">
-                      Toque no <span className="text-white font-bold">Menu (3 pontos)</span> e escolha <span className="text-white font-bold">"Instalar aplicativo"</span>.
-                    </p>
-                  </div>
-                </div>
-
-                {deferredPrompt && (
-                  <button
-                    onClick={async () => {
-                      deferredPrompt.prompt();
-                      const { outcome } = await deferredPrompt.userChoice;
-                      if (outcome === 'accepted') {
-                        onPromptUsed?.();
-                      }
-                    }}
-                    className="w-full bg-primary text-dark-bg py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all mt-2 animate-bounce"
-                  >
-                    Instalar Agora
-                  </button>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
       </main>
-
     </div>
   );
 };
