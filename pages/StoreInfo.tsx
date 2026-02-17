@@ -5,9 +5,10 @@ interface StoreInfoProps {
     isOpen: boolean;
     onBack: () => void;
     onContinue?: () => void;
+    showAlert?: (title: string, message: string, icon?: string) => void;
 }
 
-const StoreInfo: React.FC<StoreInfoProps> = ({ isOpen, onBack, onContinue }) => {
+const StoreInfo: React.FC<StoreInfoProps> = ({ isOpen, onBack, onContinue, showAlert }) => {
     const operatingHours = [
         { day: 'Domingo', hours: '18:00 - 00:30' },
         { day: 'Segunda-feira', hours: '18:00 - 00:30' },
@@ -30,14 +31,14 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ isOpen, onBack, onContinue }) => 
                 await navigator.share(shareData);
             } else {
                 await navigator.clipboard.writeText(window.location.origin);
-                alert('Link copiado para a área de transferência!');
+                showAlert?.('Sucesso', 'Link copiado para a área de transferência!', 'content_copy');
             }
         } catch (err) {
             console.error('Erro ao compartilhar:', err);
             // Fallback para cópia se o compartilhamento falhar ou for cancelado
             try {
                 await navigator.clipboard.writeText(window.location.origin);
-                alert('Link copiado para a área de transferência!');
+                showAlert?.('Sucesso', 'Link copiado para a área de transferência!', 'content_copy');
             } catch (copyErr) {
                 console.error('Erro ao copiar link:', copyErr);
             }

@@ -12,6 +12,8 @@ interface EditorProps {
     addons?: any[];
     storeStatus?: 'auto' | 'open' | 'closed';
     onLogout?: () => void;
+    showAlert?: (title: string, message: string, icon?: string) => void;
+    showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
 }
 
 interface Category {
@@ -46,7 +48,7 @@ interface CustomerProfile {
 
 type AdminTab = 'pdv' | 'vendas' | 'cardapio' | 'cozinha' | 'logistica' | 'clientes';
 
-const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFees, addons, storeStatus = 'auto', onLogout }) => {
+const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFees, addons, storeStatus = 'auto', onLogout, showAlert, showConfirm }) => {
     const [activeTab, setActiveTab] = useState<AdminTab>('pdv');
     const [orders, setOrders] = useState<Order[]>([]);
     const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -145,7 +147,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             onRefresh();
         } catch (error: any) {
             console.error('Erro ao adicionar taxa:', error);
-            alert('Erro ao adicionar taxa: ' + (error.message || 'Erro desconhecido'));
+            showAlert?.('Erro', 'Não foi possível adicionar a taxa: ' + (error.message || 'Erro desconhecido'), 'error_outline');
         } finally {
             setLoading(false);
         }
@@ -179,14 +181,21 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             onRefresh();
         } catch (error: any) {
             console.error('Erro ao atualizar taxa:', error);
-            alert('Erro ao atualizar taxa: ' + (error.message || 'Erro desconhecido'));
+            showAlert?.('Erro', 'Erro ao atualizar taxa: ' + (error.message || 'Erro desconhecido'), 'error_outline');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteDeliveryFee = async (id: string) => {
-        if (!confirm('Deseja excluir DEFINITIVAMENTE esta taxa de entrega?')) return;
+        const confirmed = await showConfirm?.(
+            'Excluir Taxa',
+            'Deseja excluir DEFINITIVAMENTE esta taxa de entrega?',
+            'Excluir',
+            'Cancelar',
+            'delete_forever'
+        );
+        if (!confirmed) return;
         const { error } = await supabase
             .from('delivery_fees')
             .delete()
@@ -295,7 +304,14 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const deleteOrderPermanently = async (orderId: string) => {
-        if (!confirm('Deseja excluir este pedido permanentemente? Esta ação não pode ser desfeita.')) return;
+        const confirmed = await showConfirm?.(
+            'Excluir Pedido',
+            'Deseja excluir este pedido permanentemente? Esta ação não pode ser desfeita.',
+            'Excluir Agora',
+            'Manter Pedido',
+            'delete_sweep'
+        );
+        if (!confirmed) return;
 
         const { error } = await supabase
             .from('orders')
@@ -315,7 +331,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
             if (error) {
                 console.error('Erro ao alternar visibilidade do produto:', error);
-                alert('Erro ao atualizar banco: ' + error.message);
+                showAlert?.('Erro', 'Não foi possível atualizar o banco: ' + error.message, 'error_outline');
                 throw error;
             }
 
@@ -506,7 +522,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             setEditingClient(null);
             fetchCustomers();
         } else {
-            alert('Erro ao atualizar cliente: ' + error.message);
+            showAlert?.('Erro', 'Não foi possível atualizar o cliente: ' + error.message, 'error_outline');
         }
         setLoading(false);
     };
@@ -520,7 +536,14 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const handleDeleteClient = async (phone: string) => {
         if (!phone || phone === 'sem-telefone') return;
-        if (!confirm('Deseja excluir DEFINITIVAMENTE os dados deste cliente da base administrativa? (Os pedidos não serão excluídos)')) return;
+        const confirmed = await showConfirm?.(
+            'Excluir Cliente',
+            'Deseja excluir DEFINITIVAMENTE os dados deste cliente da base administrativa? (Os pedidos não serão excluídos)',
+            'Excluir Dados',
+            'Manter',
+            'person_remove'
+        );
+        if (!confirmed) return;
         const { error } = await supabase
             .from('customers')
             .delete()
@@ -544,7 +567,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             setNewClient({ name: '', phone: '' });
             fetchCustomers();
         } else {
-            alert('Erro ao criar cliente: ' + error.message);
+            showAlert?.('Erro', 'Não foi possível criar o cliente: ' + error.message, 'error_outline');
         }
         setLoading(false);
     };
@@ -577,7 +600,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             setEditingItem({ ...editingItem, image: publicUrl });
         } catch (error: any) {
             console.error('Error uploading:', error);
-            alert('Erro ao fazer upload da imagem: ' + (error.message || 'Erro desconhecido'));
+            showAlert?.('Erro de Upload', 'Não foi possível fazer upload da imagem: ' + (error.message || 'Erro desconhecido'), 'cloud_off');
         } finally {
             setLoading(false);
         }
@@ -648,14 +671,21 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             setEditingItem(null);
         } catch (error: any) {
             console.error('Operation failed:', error);
-            alert('Erro ao processar produto: ' + (error.message || 'Erro desconhecido'));
+            showAlert?.('Erro', 'Não foi possível processar o produto: ' + (error.message || 'Erro desconhecido'), 'error_outline');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteProduct = async (id: string) => {
-        if (!confirm('Tem certeza que deseja excluir permanentemente este produto? Esta ação não pode ser desfeita.')) return;
+        const confirmed = await showConfirm?.(
+            'Excluir Produto',
+            'Tem certeza que deseja excluir permanentemente este produto? Esta ação não pode ser desfeita.',
+            'Excluir Tudo',
+            'Manter',
+            'delete_forever'
+        );
+        if (!confirmed) return;
         setLoading(true);
         try {
             // First attempt to delete variants (some schemas might not have them or use CASCADE)
@@ -676,7 +706,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             onRefresh();
         } catch (error: any) {
             console.error('Delete failed:', error);
-            alert('Erro ao excluir produto: ' + (error.message || 'Erro desconhecido'));
+            showAlert?.('Erro ao Excluir', 'Não foi possível excluir o produto: ' + (error.message || 'Erro desconhecido'), 'error_outline');
         } finally {
             setLoading(false);
         }
@@ -692,7 +722,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
             if (error) {
                 console.error('Erro ao alternar visibilidade do adicional:', error);
-                alert('Erro ao atualizar adicional: ' + error.message);
+                showAlert?.('Erro', 'Não foi possível atualizar o adicional: ' + error.message, 'error_outline');
                 throw error;
             }
 
@@ -714,7 +744,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         if (!error) {
             onRefresh();
         } else {
-            alert('Erro ao atualizar status: ' + error.message);
+            showAlert?.('Erro', 'Não foi possível atualizar o status: ' + error.message, 'error_outline');
         }
         setLoading(false);
     };
@@ -740,7 +770,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             setEditingAddon(null);
             onRefresh();
         } else {
-            alert('Erro ao atualizar adicional: ' + error.message);
+            showAlert?.('Erro', 'Não foi possível atualizar o adicional: ' + error.message, 'error_outline');
         }
         setLoading(false);
     };

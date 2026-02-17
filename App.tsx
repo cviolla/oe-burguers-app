@@ -4,6 +4,20 @@ import { AppView, Product, CartItem, ScheduledTime, DeliveryFee } from './types'
 import { INITIAL_PRODUCTS, PRODUCT_ADDONS } from './constants';
 
 import { supabase } from './supabase';
+
+interface DialogConfig {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  type: 'alert' | 'confirm' | 'prompt';
+  onConfirm: (value?: string) => void;
+  onCancel: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  icon?: string;
+  placeholder?: string;
+  defaultValue?: string;
+}
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
@@ -56,6 +70,80 @@ const App: React.FC = () => {
     if (saved) return JSON.parse(saved);
     return [];
   });
+
+  const [dialog, setDialog] = useState<DialogConfig>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert',
+    onConfirm: () => { },
+    onCancel: () => { },
+  });
+
+  const showAlert = (title: string, message: string, icon = 'info') => {
+    return new Promise<void>((resolve) => {
+      setDialog({
+        isOpen: true,
+        title,
+        message,
+        type: 'alert',
+        icon,
+        onConfirm: () => {
+          setDialog(prev => ({ ...prev, isOpen: false }));
+          resolve();
+        },
+        onCancel: () => {
+          setDialog(prev => ({ ...prev, isOpen: false }));
+          resolve();
+        },
+        confirmText: 'Entendido'
+      });
+    });
+  };
+
+  const showConfirm = (title: string, message: string, confirmText = 'Confirmar', cancelText = 'Cancelar', icon = 'help_outline') => {
+    return new Promise<boolean>((resolve) => {
+      setDialog({
+        isOpen: true,
+        title,
+        message,
+        type: 'confirm',
+        icon,
+        confirmText,
+        cancelText,
+        onConfirm: () => {
+          setDialog(prev => ({ ...prev, isOpen: false }));
+          resolve(true);
+        },
+        onCancel: () => {
+          setDialog(prev => ({ ...prev, isOpen: false }));
+          resolve(false);
+        }
+      });
+    });
+  };
+
+  const showPrompt = (title: string, message: string, defaultValue = '', placeholder = '', icon = 'edit') => {
+    return new Promise<string | null>((resolve) => {
+      setDialog({
+        isOpen: true,
+        title,
+        message,
+        type: 'prompt',
+        icon,
+        defaultValue,
+        placeholder,
+        onConfirm: (value) => {
+          setDialog(prev => ({ ...prev, isOpen: false }));
+          resolve(value || '');
+        },
+        onCancel: () => {
+          setDialog(prev => ({ ...prev, isOpen: false }));
+          resolve(null);
+        }
+      });
+    });
+  };
 
   useEffect(() => {
     localStorage.setItem('oe_addresses', JSON.stringify(addresses));
@@ -426,7 +514,7 @@ const App: React.FC = () => {
 
   const addToCart = (product: Product, quantity: number = 1, options: string[] = []) => {
     if (!isOpen) {
-      alert("A loja está fechada no momento. Por favor, volte durante nosso horário de funcionamento (18:00 às 00:30).");
+      showAlert("Loja Fechada", "A loja está fechada no momento. Por favor, volte durante nosso horário de funcionamento (18:00 às 00:30).", "lock_clock");
       return;
     }
     setCart(prev => {
@@ -473,9 +561,18 @@ const App: React.FC = () => {
     }));
   };
 
-  const clearCart = () => {
-    if (window.confirm('Deseja realmente limpar seu carrinho?')) {
+  const clearCart = async () => {
+    const confirmed = await showConfirm(
+      'Limpar Carrinho',
+      'Deseja realmente remover todos os itens do seu carrinho?',
+      'Limpar Tudo',
+      'Manter Itens',
+      'delete_sweep'
+    );
+
+    if (confirmed) {
       setCart([]);
+      localStorage.removeItem('oe_cart');
     }
   };
 
@@ -612,24 +709,32 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
       setCurrentView('home');
     } catch (error: any) {
       console.error("Erro ao criar pedido:", error);
-      alert("Houve um erro ao processar seu pedido: " + (error.message || "Tente novamente."));
+      showAlert("Erro no Pedido", "Houve um erro ao processar seu pedido: " + (error.message || "Tente novamente."), "error_outline");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    if (confirm('Tem certeza que deseja sair de sua conta? Seus dados salvos serão removidos deste dispositivo.')) {
+  const handleLogout = async () => {
+    const confirmed = await showConfirm(
+      'Encerrar sessão?',
+      'Para sua segurança, ao sair, suas preferências e o carrinho atual serão removidos deste dispositivo.',
+      'Sair da conta',
+      'Manter conectado',
+      'logout'
+    );
+
+    if (confirmed) {
       localStorage.removeItem('oe_user_name');
       localStorage.removeItem('oe_user_phone');
-      localStorage.removeItem('oe_preferred_payment');
-      localStorage.removeItem('oe_saved_address');
       localStorage.removeItem('oe_cart');
+      localStorage.removeItem('oe_saved_address');
+      localStorage.removeItem('oe_preferred_payment');
       setUserName('');
       setUserPhone('');
-      setPreferredPayment('pix');
-      setSavedAddress(null);
       setCart([]);
+      setSavedAddress(null);
+      setPreferredPayment('pix');
       setCurrentView('onboarding');
     }
   };
@@ -670,6 +775,10 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             storeStatus={storeStatus}
             isOpen={isOpen}
             onOpenInfo={() => setCurrentView('store_info')}
+            showAlert={showAlert}
+            showConfirm={showConfirm}
+            onAdmin={() => setCurrentView('editor')}
+            showPrompt={showPrompt}
           />
         );
       case 'product_detail':
@@ -681,10 +790,11 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             addons={productAddons}
             isAddonsVisible={isAddonsVisible}
             isOpen={isOpen}
+            showAlert={showAlert}
           />
         ) : null;
       case 'cart':
-        return <Cart cartItems={cart} onUpdateQty={updateQuantity} onRemove={removeFromCart} onClear={clearCart} onCheckout={() => isOpen ? setCurrentView('checkout') : alert("Não é possível finalizar o pedido com a loja fechada.")} onBack={() => setCurrentView('home')} isOpen={isOpen} />;
+        return <Cart cartItems={cart} onUpdateQty={updateQuantity} onRemove={removeFromCart} onClear={clearCart} onCheckout={() => isOpen ? setCurrentView('checkout') : showAlert("Loja Fechada", "Não é possível finalizar o pedido com a loja fechada.", "lock_clock")} onBack={() => setCurrentView('home')} isOpen={isOpen} />;
       case 'store_info':
         return (
           <StoreInfo
@@ -699,6 +809,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onContinue={() => {
               setCurrentView('home');
             }}
+            showAlert={showAlert}
           />
         );
       case 'checkout':
@@ -720,6 +831,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onUpdatePhone={setUserPhone}
             onUpdateAddress={setSavedAddress}
             onUpdatePayment={setPreferredPayment}
+            showAlert={showAlert}
           />
         );
       case 'scheduling':
@@ -751,6 +863,8 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             isAdmin={!!session}
             deferredPrompt={deferredPrompt}
             onPromptUsed={() => setDeferredPrompt(null)}
+            showAlert={showAlert}
+            showConfirm={showConfirm}
           />
         );
       case 'order_history':
@@ -759,7 +873,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
           addToCart(p, 1);
         }} />;
       case 'addresses':
-        return <Addresses onBack={() => setCurrentView('settings')} addresses={addresses} setAddresses={setAddresses} deliveryFees={deliveryFees} />;
+        return <Addresses onBack={() => setCurrentView('settings')} addresses={addresses} setAddresses={setAddresses} deliveryFees={deliveryFees} showAlert={showAlert} showConfirm={showConfirm} />;
 
       case 'settings':
         return (
@@ -793,6 +907,9 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
               setAddresses([]);
               setCurrentView('onboarding');
             }}
+            showAlert={showAlert}
+            showConfirm={showConfirm}
+            showPrompt={showPrompt}
           />
         );
       case 'notifications':
@@ -829,6 +946,8 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
               await supabase.auth.signOut();
               setCurrentView('home');
             }}
+            showAlert={showAlert}
+            showConfirm={showConfirm}
           />
         );
 
@@ -877,6 +996,77 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
       {cart.length > 0 && (
         <WhatsAppMovable />
       )}
+
+      <CustomDialog config={dialog} />
+    </div>
+  );
+};
+
+const CustomDialog: React.FC<{ config: DialogConfig }> = ({ config }) => {
+  const [inputValue, setInputValue] = useState(config.defaultValue || '');
+
+  useEffect(() => {
+    if (config.isOpen) {
+      setInputValue(config.defaultValue || '');
+    }
+  }, [config.isOpen, config.defaultValue]);
+
+  if (!config.isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        onClick={config.type === 'alert' ? () => config.onConfirm() : config.onCancel}
+      />
+      <div className="bg-dark-card w-full max-w-xs rounded-[2rem] border border-white/10 shadow-2xl relative z-[201] overflow-hidden animate-in zoom-in-95 duration-300 ring-1 ring-white/5">
+        <div className="p-8 flex flex-col items-center text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner shadow-primary/5">
+            <span className="material-icons-round text-3xl">{config.icon || (config.type === 'alert' ? 'info' : 'help_outline')}</span>
+          </div>
+
+          <div className="space-y-2 w-full">
+            <h3 className="text-xl font-bold text-white tracking-tight leading-tight">{config.title}</h3>
+            <p className="text-xs text-dark-text-secondary leading-relaxed font-medium px-2">
+              {config.message}
+            </p>
+          </div>
+
+          {config.type === 'prompt' && (
+            <div className="w-full mt-2">
+              <input
+                autoFocus
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={config.placeholder}
+                className="w-full bg-dark-bg border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') config.onConfirm(inputValue);
+                  if (e.key === 'Escape') config.onCancel();
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex border-t border-white/5">
+          {config.type !== 'alert' && (
+            <button
+              onClick={config.onCancel}
+              className="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-dark-text-secondary hover:bg-white/5 transition-colors border-r border-white/5 active:bg-white/10"
+            >
+              {config.cancelText || 'Cancelar'}
+            </button>
+          )}
+          <button
+            onClick={() => config.onConfirm(inputValue)}
+            className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-colors active:bg-primary/20 text-primary hover:bg-white/5`}
+          >
+            {config.confirmText || (config.type === 'confirm' ? 'Confirmar' : config.type === 'prompt' ? 'Salvar' : 'Entendido')}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

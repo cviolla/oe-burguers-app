@@ -7,10 +7,12 @@ interface AddressesProps {
   addresses: Address[];
   setAddresses: React.Dispatch<React.SetStateAction<Address[]>>;
   deliveryFees: any[];
+  showAlert?: (title: string, message: string, icon?: string) => void;
+  showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
 }
 
 
-const Addresses: React.FC<AddressesProps> = ({ onBack, addresses, setAddresses, deliveryFees }) => {
+const Addresses: React.FC<AddressesProps> = ({ onBack, addresses, setAddresses, deliveryFees, showAlert, showConfirm }) => {
 
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -62,11 +64,19 @@ const Addresses: React.FC<AddressesProps> = ({ onBack, addresses, setAddresses, 
     setIsFormOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const addressToDelete = addresses.find(a => a.id === id);
     if (!addressToDelete) return;
 
-    if (confirm(`Tem certeza que deseja excluir o endereço "${addressToDelete.label}"?`)) {
+    const confirmed = await showConfirm?.(
+      'Excluir Endereço',
+      `Tem certeza que deseja excluir o endereço "${addressToDelete.label}"?`,
+      'Excluir',
+      'Manter',
+      'delete_outline'
+    );
+
+    if (confirmed) {
       setAddresses(prev => {
         const filtered = prev.filter(a => a.id !== id);
         if (addressToDelete.isDefault && filtered.length > 0) {

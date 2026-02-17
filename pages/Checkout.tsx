@@ -30,6 +30,7 @@ interface CheckoutProps {
   onUpdatePhone?: (phone: string) => void;
   onUpdateAddress?: (address: any) => void;
   onUpdatePayment?: (payment: string) => void;
+  showAlert?: (title: string, message: string, icon?: string) => void;
 }
 
 const Checkout: React.FC<CheckoutProps> = ({
@@ -48,7 +49,8 @@ const Checkout: React.FC<CheckoutProps> = ({
   onUpdateName,
   onUpdatePhone,
   onUpdateAddress,
-  onUpdatePayment
+  onUpdatePayment,
+  showAlert
 }) => {
   const [formData, setFormData] = useState<CheckoutData>({
     street: initialAddress?.street || '',
@@ -414,7 +416,7 @@ const Checkout: React.FC<CheckoutProps> = ({
         <button
           onClick={() => {
             if (!isFormValid) {
-              alert('Por favor, preencha todos os campos obrigatórios corretamente.');
+              showAlert?.('Dados Incompletos', 'Por favor, preencha todos os campos obrigatórios corretamente para continuar.', 'warning');
               return;
             }
             onConfirm(formData);

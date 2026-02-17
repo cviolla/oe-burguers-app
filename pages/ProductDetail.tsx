@@ -11,9 +11,10 @@ interface ProductDetailProps {
   addons?: any[];
   isAddonsVisible?: boolean;
   isOpen: boolean;
+  showAlert?: (title: string, message: string, icon?: string) => void;
 }
 
-const ProductDetail: React.FC<ProductDetailProps> = ({ product, onBack, onAddToCart, addons: propAddons, isAddonsVisible = true, isOpen }) => {
+const ProductDetail: React.FC<ProductDetailProps> = ({ product, onBack, onAddToCart, addons: propAddons, isAddonsVisible = true, isOpen, showAlert }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -36,7 +37,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onBack, onAddToC
       // 2. Tenta a API de área de transferência moderna
       else if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareData.url);
-        alert('Link da loja copiado para a área de transferência! 📋');
+        showAlert?.('Sucesso', 'Link da loja copiado para a área de transferência! 📋', 'content_copy');
       }
       else {
         throw new Error('API de compartilhamento não disponível');
@@ -58,12 +59,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onBack, onAddToC
         document.body.removeChild(textArea);
 
         if (successful) {
-          alert('Link da loja copiado! 📋');
+          showAlert?.('Sucesso', 'Link da loja copiado! 📋', 'content_copy');
         } else {
-          alert('Não foi possível compartilhar. Copie o link manualmente: ' + shareData.url);
+          showAlert?.('Compartilhar', 'Não foi possível compartilhar. Copie o link manualmente: ' + shareData.url, 'info');
         }
       } catch (fallbackErr) {
-        alert('Link da loja: ' + shareData.url);
+        showAlert?.('Link da Loja', 'Link da loja: ' + shareData.url, 'link');
       }
     }
   };

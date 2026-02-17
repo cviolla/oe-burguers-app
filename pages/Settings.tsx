@@ -15,9 +15,12 @@ interface SettingsProps {
   onDeleteAccount: () => void;
   isAdmin?: boolean;
   onAdmin: () => void;
+  showAlert?: (title: string, message: string, icon?: string) => void;
+  showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
+  showPrompt?: (title: string, message: string, defaultValue?: string, placeholder?: string, icon?: string) => Promise<string | null>;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userPhone, preferredPayment, savedAddress, onUpdateName, onUpdatePhone, onViewLegal, onDeleteAccount, isAdmin, onAdmin }) => {
+const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userPhone, preferredPayment, savedAddress, onUpdateName, onUpdatePhone, onViewLegal, onDeleteAccount, isAdmin, onAdmin, showAlert, showConfirm, showPrompt }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,11 +95,18 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userP
   );
 
   const handleHelpClick = (title: string) => {
-    alert(`Abrindo: ${title}\nEsta funcionalidade está sendo integrada com o suporte via WhatsApp.`);
+    showAlert?.('Suporte', `O suporte para "${title}" está sendo integrado com nosso WhatsApp. Por favor, aguarde novidades!`, 'help_outline');
   };
 
-  const handleDeleteAccount = () => {
-    if (confirm('Tem certeza que deseja excluir sua conta definitivamente? Esta ação não pode ser desfeita.')) {
+  const handleDeleteAccount = async () => {
+    const confirmed = await showConfirm?.(
+      'Excluir Conta?',
+      'Tem certeza que deseja excluir sua conta definitivamente? Esta ação não pode ser desfeita.',
+      'Sim, excluir',
+      'Cancelar',
+      'person_remove'
+    );
+    if (confirmed) {
       onDeleteAccount();
     }
   };
@@ -125,8 +135,8 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userP
               icon="person"
               label="Editar Perfil"
               sublabel={userName}
-              action={() => {
-                const newName = prompt('Digite seu novo nome:', userName);
+              action={async () => {
+                const newName = await showPrompt?.('Editar Nome', 'Como devemos te chamar?', userName, 'Seu nome');
                 if (newName) onUpdateName(newName);
               }}
             />
@@ -134,8 +144,8 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userP
               icon="phone"
               label="Telefone"
               sublabel={userPhone || 'Cadastrar telefone'}
-              action={() => {
-                const newPhone = prompt('Digite seu novo número de telefone:', userPhone);
+              action={async () => {
+                const newPhone = await showPrompt?.('Editar WhatsApp', 'Digite seu novo número de telefone:', userPhone, '(00) 00000-0000');
                 if (newPhone) onUpdatePhone(newPhone);
               }}
             />
