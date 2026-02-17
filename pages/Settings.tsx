@@ -7,12 +7,14 @@ interface SettingsProps {
   onNavigate: (view: any) => void;
   onViewLegal: (slug: 'privacy-policy' | 'terms-of-use') => void;
   onDeleteAccount: () => void;
+  deferredPrompt?: any;
+  onPromptUsed?: () => void;
   showAlert?: (title: string, message: string, icon?: string) => void;
   showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
 }
 
 
-const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, onViewLegal, onDeleteAccount, showAlert, showConfirm }) => {
+const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, onViewLegal, onDeleteAccount, deferredPrompt, onPromptUsed, showAlert, showConfirm }) => {
 
 
   const [notifications, setNotifications] = useState(() => {
@@ -117,6 +119,67 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, onViewLegal, on
             <SettingItem icon="description" label="Termos de Uso" action={() => onViewLegal('terms-of-use')} />
           </div>
         </section>
+
+        {/* Instalação do App - MOVED FROM PROFILE */}
+        {typeof window !== 'undefined' && !window.matchMedia('(display-mode: standalone)').matches && (
+          <section className="space-y-3">
+            <h2 className="text-[10px] font-black text-dark-text-secondary uppercase tracking-[0.2em] ml-1">Aplicativo</h2>
+            <div className="bg-primary/5 border border-primary/10 rounded-[2rem] p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <span className="material-icons-round text-xl">install_mobile</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-primary">Instalar OE Burguer's</h4>
+                  <p className="text-[10px] text-dark-text-secondary uppercase font-black tracking-widest leading-tight">Para acesso rápido</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t border-white/5 pt-4">
+                <div className="flex flex-col gap-2">
+                  <p className="text-[10px] text-white/60 font-black uppercase tracking-widest flex items-center gap-2 text-left">
+                    No iPhone (Safari)
+                    <span className="material-icons-round text-xs">apple</span>
+                  </p>
+                  <div className="flex items-start gap-2.5 bg-dark-bg/40 p-3 rounded-xl border border-white/5">
+                    <span className="material-icons-round text-primary text-sm shrink-0">ios_share</span>
+                    <p className="text-[11px] text-dark-text-secondary leading-normal text-left">
+                      Toque no ícone de <span className="text-white font-bold">Compartilhar</span> na barra do Safari e selecione <span className="text-white font-bold">"Adicionar à Tela de Início"</span>.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 pt-1">
+                  <p className="text-[10px] text-white/60 font-black uppercase tracking-widest flex items-center gap-2 text-left">
+                    No Android (Chrome)
+                    <span className="material-icons-round text-xs font-normal">android</span>
+                  </p>
+                  <div className="flex items-start gap-2.5 bg-dark-bg/40 p-3 rounded-xl border border-white/5">
+                    <span className="material-icons-round text-primary text-sm shrink-0">more_vert</span>
+                    <p className="text-[11px] text-dark-text-secondary leading-normal text-left">
+                      Toque no <span className="text-white font-bold">Menu (3 pontos)</span> e escolha <span className="text-white font-bold">"Instalar aplicativo"</span>.
+                    </p>
+                  </div>
+                </div>
+
+                {deferredPrompt && (
+                  <button
+                    onClick={async () => {
+                      deferredPrompt.prompt();
+                      const { outcome } = await deferredPrompt.userChoice;
+                      if (outcome === 'accepted') {
+                        onPromptUsed?.();
+                      }
+                    }}
+                    className="w-full bg-primary text-dark-bg py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all mt-2 animate-bounce"
+                  >
+                    Instalar Agora
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         <div className="pt-1 pb-10 flex flex-col items-center gap-4">
           <button
