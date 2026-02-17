@@ -59,8 +59,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin, onViewLegal }
           </div>
         </div>
 
-        <div className="pt-4 flex flex-col items-center justify-center gap-6">
-          <div className="flex flex-col items-center gap-4">
+        <div className="pt-4 flex flex-col items-center justify-center gap-8">
+          <div className="flex flex-col items-center gap-6">
             <div className="flex items-center justify-center gap-2">
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map(i => (
@@ -85,10 +85,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin, onViewLegal }
                   navigator.clipboard.writeText(shareData.url);
                 }
               }}
-              className="flex items-center gap-2 bg-primary px-6 py-2 rounded-full text-dark-bg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all"
+              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-dark-bg shadow-lg shadow-primary/20 active:scale-90 transition-all"
+              title="Compartilhar App"
             >
-              <span className="material-icons-round text-sm">share</span>
-              Compartilhar App
+              <span className="material-icons-round text-xl">share</span>
             </button>
           </div>
         </div>
