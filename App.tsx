@@ -370,9 +370,14 @@ const App: React.FC = () => {
     };
 
     checkOpenStatus();
-    const timer = setInterval(checkOpenStatus, 60000);
+    const timer = setInterval(() => {
+      checkOpenStatus();
+      fetchStoreStatus();
+      fetchProducts();
+      if (userPhone) fetchUserOrders(userPhone);
+    }, 30000);
     return () => clearInterval(timer);
-  }, [storeStatus]);
+  }, [storeStatus, userPhone]);
 
   // Efeito para garantir que views restritas não sejam acessadas se a loja fechar subitamente
   useEffect(() => {
