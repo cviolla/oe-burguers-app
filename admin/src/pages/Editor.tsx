@@ -1090,17 +1090,19 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const renderTabs = () => (
         <div className="fixed bottom-0 left-0 right-0 z-50 md:static md:w-64 md:h-screen transition-all duration-500">
-            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-3xl border-t border-white/5 p-4 md:p-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:border-t-0 md:border-r md:border-white/10 md:justify-start md:gap-4 md:pt-4 md:px-4 md:overflow-y-auto custom-scrollbar md:rounded-none">
+            <nav className="bg-[#1A0F0A] border-r border-white/5 h-full flex flex-col md:w-72 shadow-2xl relative z-50">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] md:hidden"></div>
 
                 {/* Desktop Logo Area */}
-                <div className="hidden md:flex flex-col items-center mb-4 w-full px-4 text-center">
-                    <img src="/admin-logo.png" className="w-36 h-36 object-contain mb-2 drop-shadow-[0_0_30px_rgba(255,183,0,0.15)]" alt="OE Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.logo-fallback')?.classList.remove('hidden'); }} />
-                    <div className="logo-fallback hidden w-36 h-36 rounded-3xl bg-primary/10 flex items-center justify-center mb-2">
-                        <span className="material-icons-round text-primary text-6xl">admin_panel_settings</span>
+                <div className="hidden md:flex flex-col items-center mb-8 w-full px-6 text-center pt-8">
+                    <img src="/admin-logo.png" className="w-24 h-24 object-contain mb-4 drop-shadow-[0_0_15px_rgba(255,183,0,0.1)]" alt="OE Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.logo-fallback')?.classList.remove('hidden'); }} />
+                    <div className="logo-fallback hidden w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                        <span className="material-icons-round text-primary text-4xl">admin_panel_settings</span>
                     </div>
-                    <h2 className="text-base font-black text-white uppercase tracking-tighter">OE Administração</h2>
-                    <p className="text-[8px] text-primary font-black uppercase tracking-[0.5em] opacity-60">Control Panel v2</p>
+                    <div className="space-y-1">
+                        <h2 className="text-lg font-black text-white uppercase tracking-tighter leading-none">OE Administração</h2>
+                        <p className="text-[9px] text-primary font-bold uppercase tracking-[0.3em] opacity-80">Painel de Controle</p>
+                    </div>
                 </div>
 
                 {[
@@ -1906,30 +1908,62 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
             <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
                 {/* Desktop Top Bar */}
-                <header className="hidden md:flex items-center justify-between px-10 py-6 border-b border-white/5 bg-dark-bg/40 backdrop-blur-3xl sticky top-0 z-40">
-                    <div className="flex items-center gap-4">
-                        <div className="w-1 h-8 bg-primary rounded-full"></div>
-                        <h2 className="text-xl font-black uppercase tracking-tight">
-                            {activeTab === 'pdv' && 'Terminal PDV'}
-                            {activeTab === 'vendas' && 'Relatórios e Vendas'}
-                            {activeTab === 'clientes' && 'Gestão de Clientes'}
-                            {activeTab === 'cozinha' && 'Monitor de Produção'}
-                            {activeTab === 'cardapio' && 'Gestão de Cardápio'}
-                            {activeTab === 'logistica' && 'Logística de Entrega'}
-                        </h2>
+                {/* Desktop Top Bar - Redesigned */}
+                <header className="hidden md:flex flex-col px-10 py-8 bg-dark-bg sticky top-0 z-40 gap-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
+                                {activeTab === 'pdv' && 'Fila de Pedidos'}
+                                {activeTab === 'vendas' && 'Vendas & Relatórios'}
+                                {activeTab === 'clientes' && 'Base de Clientes'}
+                                {activeTab === 'cozinha' && 'Monitor de Produção'}
+                                {activeTab === 'cardapio' && 'Gestão de Cardápio'}
+                                {activeTab === 'logistica' && 'Logística de Entrega'}
+                            </h2>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em]">Painel de Controle de {activeTab === 'pdv' ? 'Vendas' : activeTab}</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-6">
-                        <div className="flex flex-col items-end">
-                            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Status Geral</p>
-                            <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Sistema Conectado</p>
+
+                    {/* Store Status Section - Desktop Version (Matching Mobile) */}
+                    <div className="bg-[#1A0F0A] border border-white/5 rounded-3xl p-6 flex items-center justify-between gap-8">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                                <span className="material-icons-round text-2xl">schedule</span>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mb-0.5">Status da Loja</p>
+                                <div className="flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${storeStatus === 'auto' ? 'bg-amber-500' : storeStatus === 'open' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`}></span>
+                                    <p className="text-sm font-black text-white uppercase tracking-wide">
+                                        {storeStatus === 'auto' ? 'Automático' : storeStatus === 'open' ? 'Aberta Manualmente' : 'Fechada Manualmente'}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <button onClick={onBack} className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2">
-                            <span className="material-icons-round text-base">web</span>
-                            Ver Loja
-                        </button>
+
+                        <div className="flex bg-dark-bg p-1.5 rounded-2xl border border-white/5 flex-1 max-w-md">
+                            <button
+                                onClick={() => handleUpdateStoreStatus('open')}
+                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${storeStatus === 'open' ? 'bg-emerald-500 text-dark-bg shadow-lg shadow-emerald-500/20' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <span className="material-icons-round text-base">check_circle</span>
+                                Aberto
+                            </button>
+                            <button
+                                onClick={() => handleUpdateStoreStatus('auto')}
+                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${storeStatus === 'auto' ? 'bg-amber-500 text-dark-bg shadow-lg shadow-amber-500/20' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <span className="material-icons-round text-base">schedule</span>
+                                Auto
+                            </button>
+                            <button
+                                onClick={() => handleUpdateStoreStatus('closed')}
+                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${storeStatus === 'closed' ? 'bg-rose-500 text-dark-bg shadow-lg shadow-rose-500/20' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <span className="material-icons-round text-base">block</span>
+                                Fechado
+                            </button>
+                        </div>
                     </div>
                 </header>
 

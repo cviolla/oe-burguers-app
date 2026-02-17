@@ -136,7 +136,6 @@ function App() {
           'postgres_changes',
           { event: '*', schema: 'public', table: 'categories' },
           () => {
-            fetchCategories?.(); // Caso categories esteja sendo buscado via refreshData
             fetchProducts();
           }
         )
