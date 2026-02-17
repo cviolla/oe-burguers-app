@@ -36,7 +36,6 @@ import Onboarding from './pages/Onboarding';
 import Login from './pages/Login';
 import Navbar from './components/Navbar';
 import Legal from './pages/Legal';
-import Editor from './pages/Editor';
 import StoreInfo from './pages/StoreInfo';
 
 const App: React.FC = () => {
@@ -284,10 +283,7 @@ const App: React.FC = () => {
 
   // Efeito para garantir que a página 'store_info' só apareça quando a loja estiver fechada
   useEffect(() => {
-    // Não redirecionar se estiver logado como admin ou em telas de gestão
-    if (currentView === 'editor') return;
-
-    if (isOpen) {
+    if (currentView === 'store_info') {
       // Se a loja está aberta e o usuário está na store_info, manda para home
       if (currentView === 'store_info') {
         setCurrentView('home');
@@ -779,7 +775,6 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onOpenInfo={() => setCurrentView('store_info')}
             showAlert={showAlert}
             showConfirm={showConfirm}
-            onAdmin={() => setCurrentView('editor')}
             showPrompt={showPrompt}
           />
         );
@@ -861,8 +856,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onHistory={() => setCurrentView('order_history')}
             onAddresses={() => setCurrentView('addresses')}
             onNavigate={setCurrentView}
-            onAdmin={() => setCurrentView('editor')}
-            isAdmin={!!session}
+            isAdmin={false}
             deferredPrompt={deferredPrompt}
             onPromptUsed={() => setDeferredPrompt(null)}
             showAlert={showAlert}
@@ -888,8 +882,8 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             savedAddress={savedAddress}
             onUpdateName={setUserName}
             onUpdatePhone={setUserPhone}
-            isAdmin={!!session}
-            onAdmin={() => setCurrentView('editor')}
+            isAdmin={false}
+            onAdmin={() => { }}
             onViewLegal={(slug) => {
               setLegalDoc(slug);
               setCurrentView('legal');
@@ -926,32 +920,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
         );
       case 'legal':
         return <Legal slug={legalDoc} onBack={() => setCurrentView('settings')} />;
-      case 'editor':
-        if (!session) {
-          setCurrentView('home');
-          return null;
-        }
-        return (
-          <Editor
-            onBack={() => setCurrentView('home')}
-            products={products}
-            onRefresh={() => {
-              fetchProducts();
-              fetchAddons();
-              fetchStoreStatus();
-              fetchDeliveryFees();
-            }}
-            deliveryFees={deliveryFees}
-            addons={productAddons}
-            storeStatus={storeStatus}
-            onLogout={async () => {
-              await supabase.auth.signOut();
-              setCurrentView('home');
-            }}
-            showAlert={showAlert}
-            showConfirm={showConfirm}
-          />
-        );
+
 
       default:
         return (
@@ -980,10 +949,10 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
     }
   };
 
-  const showNavbar = !['onboarding', 'login', 'product_detail', 'cart', 'checkout', 'settings', 'order_history', 'addresses', 'scheduling', 'payment_methods', 'editor', 'store_info', 'legal'].includes(currentView);
+  const showNavbar = !['onboarding', 'login', 'product_detail', 'cart', 'checkout', 'settings', 'order_history', 'addresses', 'scheduling', 'payment_methods', 'store_info', 'legal'].includes(currentView);
 
   return (
-    <div className={`flex flex-col min-h-screen ${currentView === 'editor' ? 'w-full' : 'max-w-md md:max-w-4xl mx-auto'} relative shadow-2xl bg-dark-bg transition-all duration-500`}>
+    <div className={`flex flex-col min-h-screen max-w-md md:max-w-4xl mx-auto relative shadow-2xl bg-dark-bg transition-all duration-500`}>
       <main className="flex-1 overflow-visible">
         {renderView()}
       </main>

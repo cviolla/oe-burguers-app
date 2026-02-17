@@ -8,12 +8,10 @@ interface ProfileProps {
   onHistory: () => void;
   onAddresses?: () => void;
   onNavigate: (view: any) => void;
-  onAdmin: () => void;
   userName: string;
   userPhone: string;
   preferredPayment?: string;
   savedAddress?: any;
-  isAdmin?: boolean;
   deferredPrompt?: any;
   onPromptUsed?: () => void;
 }
@@ -24,12 +22,10 @@ const Profile: React.FC<ProfileProps> = ({
   onHistory,
   onAddresses,
   onNavigate,
-  onAdmin,
   userName,
   userPhone,
   preferredPayment,
   savedAddress,
-  isAdmin,
   deferredPrompt,
   onPromptUsed
 }) => {
