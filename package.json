@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:admin": "cd admin && npm run dev",
     "build": "vite build && cd admin && npm install && npm run build",
     "preview": "vite preview"
   },
