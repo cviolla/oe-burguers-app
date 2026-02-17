@@ -5,12 +5,14 @@ interface SettingsProps {
   onBack: () => void;
   onNavigate: (view: any) => void;
   userName: string;
+  userPhone: string;
   onUpdateName: (name: string) => void;
+  onUpdatePhone: (phone: string) => void;
   onViewLegal: (slug: 'privacy-policy' | 'terms-of-use') => void;
   onDeleteAccount: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, onUpdateName, onViewLegal, onDeleteAccount }) => {
+const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userPhone, onUpdateName, onUpdatePhone, onViewLegal, onDeleteAccount }) => {
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('oe_notifications');
     return saved ? JSON.parse(saved) : { push: true };
@@ -90,6 +92,15 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, onUpd
               action={() => {
                 const newName = prompt('Digite seu novo nome:', userName);
                 if (newName) onUpdateName(newName);
+              }}
+            />
+            <SettingItem
+              icon="phone"
+              label="Telefone"
+              sublabel={userPhone || 'Cadastrar telefone'}
+              action={() => {
+                const newPhone = prompt('Digite seu novo número de telefone:', userPhone);
+                if (newPhone) onUpdatePhone(newPhone);
               }}
             />
             <SettingItem

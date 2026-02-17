@@ -737,7 +737,9 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onBack={() => setCurrentView('profile')}
             onNavigate={setCurrentView}
             userName={userName}
+            userPhone={userPhone}
             onUpdateName={setUserName}
+            onUpdatePhone={setUserPhone}
             onViewLegal={(slug) => {
               setLegalDoc(slug);
               setCurrentView('legal');
