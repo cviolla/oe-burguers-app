@@ -87,12 +87,23 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         const clientMap = new Map();
         const profileMap = new Map<string, CustomerProfile>((customerProfiles || []).map(p => [p.phone, p]));
 
-        filteredOrdersRange.forEach(order => {
+        // Filtra pedidos primeiro com base no timeRange selecionado
+        const relevantOrders = timeRange === 'all'
+            ? orders
+            : orders.filter(order => {
+                const now = new Date();
+                const days = parseInt(timeRange);
+                const cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+                return new Date(order.created_at) >= cutoff;
+            });
+
+        relevantOrders.forEach(order => {
             const phone = (order.client_phone || 'sem-telefone').trim();
             const profile = profileMap.get(phone);
 
             const existing = clientMap.get(phone);
             if (!existing || new Date(order.created_at) > new Date(existing.last_order_at)) {
+                // Se é um cliente novo no mapa OU este pedido é mais recente, atualiza os dados principais
                 clientMap.set(phone, {
                     name: profile?.name || order.client_name,
                     phone: order.client_phone,
@@ -105,27 +116,30 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     is_archived: profile?.is_archived || false
                 });
             } else {
+                // Se já existe e este pedido é mais antigo, apenas soma os totais
                 existing.total_orders += 1;
                 existing.total_spent_cents += order.total_cents;
                 if (order.is_pickup) existing.is_pickup_fan += 1;
             }
         });
 
-        let clientList = Array.from(clientMap.values());
+        const allClients = Array.from(clientMap.values());
 
-        clientList = clientList.filter(c => c.is_archived === showArchivedClients);
+        // Filtra por arquivados
+        let filteredClients = allClients.filter((c: any) => c.is_archived === showArchivedClients);
 
+        // Filtra por busca
         if (clientSearch) {
             const query = clientSearch;
-            clientList = clientList.filter(c =>
+            filteredClients = filteredClients.filter((c: any) =>
                 searchMatch(c.name || '', query) ||
                 searchMatch(c.phone || '', query) ||
                 searchMatch(c.neighborhood || '', query)
             );
         }
 
-        return clientList.sort((a, b) => b.total_spent_cents - a.total_spent_cents);
-    }, [orders, clientSearch, customerProfiles, showArchivedClients]);
+        return filteredClients.sort((a: any, b: any) => b.total_spent_cents - a.total_spent_cents);
+    }, [orders, timeRange, clientSearch, customerProfiles, showArchivedClients]);
 
     const handleAddDeliveryFee = async () => {
         if (!newNeighborhood || !newFee) return;
