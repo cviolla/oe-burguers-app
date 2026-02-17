@@ -1,0 +1,1 @@
+{"root":["./eslint.config.js","./postcss.config.js","./tailwind.config.js","./vite.config.ts","./src/app.tsx","./src/constants.tsx","./src/main.tsx","./src/supabase.ts","./src/types.ts","./src/utils.ts","./src/pages/editor.tsx","./src/pages/login.tsx"],"version":"5.9.3"}
