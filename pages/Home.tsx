@@ -123,9 +123,8 @@ const Home: React.FC<HomeProps> = ({ userName, products, onProductClick, onLogou
           <div>
             <h1 className="text-2xl font-black tracking-tight text-white leading-none mb-3">Olá, {userName}</h1>
 
-            <div className="flex items-center gap-3">
-              <span className="text-[9px] text-primary font-black uppercase tracking-[0.4em] whitespace-nowrap">OE BURGUERS</span>
-              <span className="w-1 h-1 bg-white/20 rounded-full flex-shrink-0"></span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-primary font-black uppercase tracking-[0.1em] whitespace-nowrap">OE BURGUERS</span>
               <a
                 href="https://www.google.com/maps/search/?api=1&query=Praça+Nossa+Sra.+das+Gracas+-+Ponta+Negra,+Maricá+-+RJ,+Brasil"
                 target="_blank"
