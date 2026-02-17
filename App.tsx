@@ -175,6 +175,32 @@ const App: React.FC = () => {
     localStorage.setItem('oe_preferred_payment', preferredPayment);
   }, [preferredPayment]);
 
+  // Sincronizar savedAddress com o endereço padrão da lista de endereços
+  useEffect(() => {
+    const defaultAddr = addresses.find(a => a.isDefault);
+    if (defaultAddr) {
+      const currentSavedStr = JSON.stringify(savedAddress);
+      const defaultAddrStr = JSON.stringify({
+        street: defaultAddr.street,
+        number: defaultAddr.number,
+        neighborhood: defaultAddr.neighborhood,
+        complement: defaultAddr.complement || ''
+      });
+
+      if (currentSavedStr !== defaultAddrStr) {
+        setSavedAddress({
+          street: defaultAddr.street,
+          number: defaultAddr.number,
+          neighborhood: defaultAddr.neighborhood,
+          complement: defaultAddr.complement || ''
+        });
+      }
+    } else if (addresses.length > 0) {
+      // Se não tem padrão mas tem endereços, define o primeiro como padrão
+      setAddresses(prev => prev.map((a, i) => i === 0 ? { ...a, isDefault: true } : a));
+    }
+  }, [addresses]);
+
   useEffect(() => {
     if (savedAddress) {
       localStorage.setItem('oe_saved_address', JSON.stringify(savedAddress));
@@ -218,21 +244,6 @@ const App: React.FC = () => {
     fetchStoreStatus();
     fetchCategories();
 
-    // Limpar nomes de teste do localStorage se existirem
-    const cachedName = localStorage.getItem('oe_user_name');
-    if (cachedName === 'Andres' || cachedName === 'andres') {
-      localStorage.removeItem('oe_user_name');
-      setUserName('');
-    }
-
-    // Limpar endereços de teste do localStorage
-    const cachedAddresses = localStorage.getItem('oe_addresses');
-    if (cachedAddresses && (cachedAddresses.includes('Avenida Paulista') || cachedAddresses.includes('Haddock Lobo'))) {
-      localStorage.removeItem('oe_addresses');
-      localStorage.removeItem('oe_saved_address');
-      setAddresses([]);
-      setSavedAddress(null);
-    }
     window.history.replaceState({ view: currentView }, '');
 
     const handlePopState = (event: PopStateEvent) => {
