@@ -59,16 +59,37 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart, onLogin, onViewLegal }
           </div>
         </div>
 
-        <div className="pt-4 flex flex-col items-center justify-center gap-4">
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4].map(i => (
-                <img key={i} src={`https://i.pravatar.cc/100?u=${i}`} className="w-6 h-6 rounded-full border border-dark-bg" alt="User" />
-              ))}
+        <div className="pt-4 flex flex-col items-center justify-center gap-6">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex -space-x-2">
+                {[1, 2, 3, 4].map(i => (
+                  <img key={i} src={`https://i.pravatar.cc/100?u=${i}`} className="w-6 h-6 rounded-full border border-dark-bg" alt="User" />
+                ))}
+              </div>
+              <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest">
+                +5.000 clientes satisfeitos
+              </p>
             </div>
-            <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest">
-              +5.000 clientes satisfeitos
-            </p>
+
+            <button
+              onClick={() => {
+                const shareData = {
+                  title: "OE BURGUER'S",
+                  text: 'O Hambúrguer Perfeito te espera!',
+                  url: 'https://www.oeburguers.shop/',
+                };
+                if (navigator.share) {
+                  navigator.share(shareData).catch(() => { });
+                } else {
+                  navigator.clipboard.writeText(shareData.url);
+                }
+              }}
+              className="flex items-center gap-2 bg-primary px-6 py-2 rounded-full text-dark-bg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all"
+            >
+              <span className="material-icons-round text-sm">share</span>
+              Compartilhar App
+            </button>
           </div>
         </div>
       </div>
