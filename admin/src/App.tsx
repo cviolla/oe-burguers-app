@@ -187,6 +187,7 @@ function App() {
         onLogout={() => supabase.auth.signOut()}
         showAlert={showAlert}
         showConfirm={showConfirm}
+        showPrompt={showPrompt}
       />
       <CustomDialog config={dialog} />
     </div>

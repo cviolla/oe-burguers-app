@@ -14,6 +14,7 @@ interface EditorProps {
     onLogout?: () => void;
     showAlert?: (title: string, message: string, icon?: string) => void;
     showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
+    showPrompt?: (title: string, message: string, defaultValue?: string, placeholder?: string, icon?: string) => Promise<string | null>;
 }
 
 interface Category {
@@ -49,7 +50,7 @@ interface CustomerProfile {
 
 type AdminTab = 'pdv' | 'vendas' | 'cardapio' | 'cozinha' | 'logistica' | 'clientes';
 
-const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFees, addons, storeStatus = 'auto', onLogout, showAlert, showConfirm }) => {
+const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFees, addons, storeStatus = 'auto', onLogout, showAlert, showConfirm, showPrompt }) => {
     const [activeTab, setActiveTab] = useState<AdminTab>('pdv');
     const [orders, setOrders] = useState<Order[]>([]);
     const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -140,6 +141,22 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
         return filteredClients.sort((a: any, b: any) => b.total_spent_cents - a.total_spent_cents);
     }, [orders, timeRange, clientSearch, customerProfiles, showArchivedClients]);
+
+    const handleLogoutClick = async () => {
+        const confirmed = showConfirm
+            ? await showConfirm(
+                'Sair do Painel',
+                'Deseja realmente sair do painel administrativo?',
+                'Sair AGORA',
+                'Continuar',
+                'logout'
+            )
+            : confirm('Deseja realmente sair do painel administrativo?');
+
+        if (confirmed && onLogout) {
+            onLogout();
+        }
+    };
 
     const handleAddDeliveryFee = async () => {
         if (!newNeighborhood || !newFee) return;
@@ -1072,7 +1089,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 {/* Desktop Logout at Bottom */}
                 <div className="hidden md:flex mt-auto w-full p-4 border-t border-white/5">
                     <button
-                        onClick={() => confirm('Deseja realmente sair?') && onLogout?.()}
+                        onClick={handleLogoutClick}
                         className="w-full flex items-center gap-4 px-5 py-4 text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all font-black uppercase text-[10px] tracking-widest"
                     >
                         <span className="material-icons-round">logout</span>
@@ -1822,11 +1839,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 </div>
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => {
-                            if (confirm('Deseja realmente sair do painel administrativo?')) {
-                                if (onLogout) onLogout();
-                            }
-                        }}
+                        onClick={handleLogoutClick}
                         className="w-10 h-10 aspect-square shrink-0 rounded-xl bg-rose-500/10 border border-rose-500/10 flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-lg"
                     >
                         <span className="material-icons-round text-lg">logout</span>
@@ -2073,8 +2086,10 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            const url = prompt("Cole a URL da imagem:", editingItem.image);
+                                        onClick={async () => {
+                                            const url = showPrompt
+                                                ? await showPrompt("Link da Imagem", "Cole a URL da imagem abaixo:", editingItem.image, "https://...")
+                                                : prompt("Cole a URL da imagem:", editingItem.image);
                                             if (url) setEditingItem({ ...editingItem, image: url });
                                         }}
                                         className="flex-1 bg-white/5 border border-white/10 h-12 rounded-lg text-white active:scale-95 transition-all flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest hover:bg-white/10 hover:border-primary/20"
