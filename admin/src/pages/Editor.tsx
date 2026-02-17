@@ -36,6 +36,7 @@ interface Order {
 
     is_pickup: boolean;
     created_at: string;
+    zip_code?: string;
     order_items?: any[];
 }
 
