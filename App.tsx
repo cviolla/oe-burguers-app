@@ -738,6 +738,8 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             onNavigate={setCurrentView}
             userName={userName}
             userPhone={userPhone}
+            preferredPayment={preferredPayment}
+            savedAddress={savedAddress}
             onUpdateName={setUserName}
             onUpdatePhone={setUserPhone}
             onViewLegal={(slug) => {

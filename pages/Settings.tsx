@@ -6,13 +6,15 @@ interface SettingsProps {
   onNavigate: (view: any) => void;
   userName: string;
   userPhone: string;
+  preferredPayment: string;
+  savedAddress: any;
   onUpdateName: (name: string) => void;
   onUpdatePhone: (phone: string) => void;
   onViewLegal: (slug: 'privacy-policy' | 'terms-of-use') => void;
   onDeleteAccount: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userPhone, onUpdateName, onUpdatePhone, onViewLegal, onDeleteAccount }) => {
+const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userPhone, preferredPayment, savedAddress, onUpdateName, onUpdatePhone, onViewLegal, onDeleteAccount }) => {
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('oe_notifications');
     return saved ? JSON.parse(saved) : { push: true };
@@ -106,13 +108,21 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userP
             <SettingItem
               icon="place"
               label="Endereços de Entrega"
-              sublabel="Gerenciar locais salvos"
+              sublabel={savedAddress ? `${savedAddress.street}, ${savedAddress.number}` : "Gerenciar locais salvos"}
               action={() => onNavigate('addresses')}
             />
             <SettingItem
               icon="credit_card"
               label="Métodos de Pagamento"
-              sublabel="PIX, Cartões e outros"
+              sublabel={
+                preferredPayment === 'pix' ? 'PIX' :
+                  preferredPayment === 'dinheiro' ? 'Dinheiro' :
+                    preferredPayment === 'credito' ? 'Cartão de Crédito' :
+                      preferredPayment === 'debito' ? 'Cartão de Débito' :
+                        preferredPayment === 'mumbuca' ? 'Mumbuca' :
+                          preferredPayment === 'ppt' ? 'PPT' :
+                            'Selecione um método'
+              }
               action={() => onNavigate('payment_methods')}
             />
           </div>
