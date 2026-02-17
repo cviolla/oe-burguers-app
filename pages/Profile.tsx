@@ -177,41 +177,6 @@ const Profile: React.FC<ProfileProps> = ({
         </section>
 
 
-        {/* Menu Options */}
-        <section className="space-y-3">
-          <h3 className="text-sm font-black uppercase tracking-tight text-white/40 px-1">Dados Salvos</h3>
-          <div className="space-y-2">
-            <div
-              onClick={() => onNavigate('payment_methods')}
-              className="bg-dark-card py-3.5 px-5 rounded-2xl flex items-center justify-between border border-white/5 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <span className="material-icons-round text-primary">credit_card</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold block leading-tight">Método de Pagamento</span>
-                  <span className="text-[10px] text-dark-text-secondary uppercase tracking-widest block leading-tight">{preferredPayment || 'Não definido'}</span>
-                </div>
-              </div>
-              <span className="material-icons-round text-dark-text-secondary">chevron_right</span>
-            </div>
-
-            <div
-              onClick={onAddresses}
-              className="bg-dark-card py-3.5 px-5 rounded-2xl flex items-center justify-between border border-white/5 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <span className="material-icons-round text-primary">place</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold block leading-tight">Último Endereço</span>
-                  <span className="text-[10px] text-dark-text-secondary uppercase tracking-widest truncate block leading-tight">
-                    {savedAddress ? `${savedAddress.street}, ${savedAddress.number}` : 'Nenhum endereço salvo'}
-                  </span>
-                </div>
-              </div>
-              <span className="material-icons-round text-dark-text-secondary">chevron_right</span>
-            </div>
-          </div>
-        </section>
 
         {/* Instalação do App */}
         {typeof window !== 'undefined' && !window.matchMedia('(display-mode: standalone)').matches && (
