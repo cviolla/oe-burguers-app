@@ -262,6 +262,31 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Real-time listener for store status
+  useEffect(() => {
+    const channel = supabase
+      .channel('store-config-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'store_config',
+          filter: 'key=eq.store_status'
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).value) {
+            setStoreStatus((payload.new as any).value);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     const checkOpenStatus = () => {
       if (storeStatus === 'open') {
