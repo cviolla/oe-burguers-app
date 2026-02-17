@@ -764,7 +764,13 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
       case 'notifications':
         return <Notifications onBack={() => setCurrentView('home')} />;
       case 'payment_methods':
-        return <PaymentMethods onBack={() => setCurrentView('settings')} />;
+        return (
+          <PaymentMethods
+            onBack={() => setCurrentView('settings')}
+            preferredPayment={preferredPayment}
+            onUpdatePayment={setPreferredPayment}
+          />
+        );
       case 'legal':
         return <Legal slug={legalDoc} onBack={() => setCurrentView('settings')} />;
       case 'editor':

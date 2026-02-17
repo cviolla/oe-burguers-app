@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 
 interface PaymentMethodsProps {
     onBack: () => void;
+    preferredPayment: string;
+    onUpdatePayment: (method: string) => void;
 }
 
-const PaymentMethods: React.FC<PaymentMethodsProps> = ({ onBack }) => {
-    const [selectedMethod, setSelectedMethod] = useState('PIX');
+const PaymentMethods: React.FC<PaymentMethodsProps> = ({ onBack, preferredPayment, onUpdatePayment }) => {
+    const [selectedMethod, setSelectedMethod] = useState(preferredPayment);
 
     const methods = [
         { id: 'pix', label: 'PIX', icon: 'qr_code', color: 'text-[#32BCAD]' },
@@ -39,24 +41,27 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ onBack }) => {
                     {methods.map((method) => (
                         <div
                             key={method.id}
-                            onClick={() => setSelectedMethod(method.label)}
-                            className={`py-3 px-5 rounded-2xl border transition-all duration-300 cursor-pointer flex items-center justify-between group ${selectedMethod === method.label
+                            onClick={() => {
+                                setSelectedMethod(method.id);
+                                onUpdatePayment(method.id);
+                            }}
+                            className={`py-3 px-5 rounded-2xl border transition-all duration-300 cursor-pointer flex items-center justify-between group ${selectedMethod === method.id
                                 ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10'
                                 : 'bg-dark-card border-white/5 hover:border-white/20'
                                 }`}
                         >
                             <div className="flex items-center gap-4">
-                                <div className={`w-9 h-9 rounded-xl bg-dark-bg flex items-center justify-center border border-white/5 shadow-inner transition-transform group-hover:scale-110 ${selectedMethod === method.label ? 'text-primary' : 'text-white/20'}`}>
-                                    <span className={`material-icons-round text-xl ${selectedMethod === method.label ? method.color : ''}`}>{method.icon}</span>
+                                <div className={`w-9 h-9 rounded-xl bg-dark-bg flex items-center justify-center border border-white/5 shadow-inner transition-transform group-hover:scale-110 ${selectedMethod === method.id ? 'text-primary' : 'text-white/20'}`}>
+                                    <span className={`material-icons-round text-xl ${selectedMethod === method.id ? method.color : ''}`}>{method.icon}</span>
                                 </div>
-                                <h3 className={`font-black tracking-tight text-[13px] ${selectedMethod === method.label ? 'text-white' : 'text-white/40'}`}>
+                                <h3 className={`font-black tracking-tight text-[13px] ${selectedMethod === method.id ? 'text-white' : 'text-white/40'}`}>
                                     {method.label}
                                 </h3>
                             </div>
 
-                            <div className={`w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center ${selectedMethod === method.label ? 'border-primary' : 'border-white/10'
+                            <div className={`w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center ${selectedMethod === method.id ? 'border-primary' : 'border-white/10'
                                 }`}>
-                                {selectedMethod === method.label && (
+                                {selectedMethod === method.id && (
                                     <div className="w-2.5 h-2.5 bg-primary rounded-full animate-in zoom-in duration-300"></div>
                                 )}
                             </div>
