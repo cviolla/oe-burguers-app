@@ -26,6 +26,10 @@ interface CheckoutProps {
   initialAddress?: any;
   deliveryFees: any[];
   isLoading?: boolean;
+  onUpdateName?: (name: string) => void;
+  onUpdatePhone?: (phone: string) => void;
+  onUpdateAddress?: (address: any) => void;
+  onUpdatePayment?: (payment: string) => void;
 }
 
 const Checkout: React.FC<CheckoutProps> = ({
@@ -40,7 +44,11 @@ const Checkout: React.FC<CheckoutProps> = ({
   initialPayment = 'pix',
   initialAddress = null,
   deliveryFees = [],
-  isLoading = false
+  isLoading = false,
+  onUpdateName,
+  onUpdatePhone,
+  onUpdateAddress,
+  onUpdatePayment
 }) => {
   const [formData, setFormData] = useState<CheckoutData>({
     street: initialAddress?.street || '',
@@ -79,21 +87,43 @@ const Checkout: React.FC<CheckoutProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
+    let newValue = value;
+
     if (name === 'phone') {
-      const masked = value
+      newValue = value
         .replace(/\D/g, '')
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{5})(\d)/, '$1-$2')
         .substring(0, 15);
-      setFormData(prev => ({ ...prev, [name]: masked }));
+
+      setFormData(prev => ({ ...prev, [name]: newValue }));
+      onUpdatePhone?.(newValue);
       return;
     }
 
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: newValue };
+
+      // Sync specific fields to global state
+      if (name === 'name') onUpdateName?.(newValue);
+
+      // If any address field changes, update the whole address object in parent
+      if (['street', 'number', 'neighborhood', 'complement'].includes(name)) {
+        onUpdateAddress?.({
+          street: updated.street,
+          number: updated.number,
+          neighborhood: updated.neighborhood,
+          complement: updated.complement
+        });
+      }
+
+      return updated;
+    });
   };
 
   const handlePaymentSelect = (id: string) => {
     setFormData(prev => ({ ...prev, paymentMethod: id }));
+    onUpdatePayment?.(id);
   };
 
   const paymentMethods = [
@@ -121,33 +151,45 @@ const Checkout: React.FC<CheckoutProps> = ({
 
       <main className="p-6 pb-44 space-y-8">
         {/* User Status (Moved up) */}
-        <section className="space-y-4">
+        <section className="space-y-4 animate-fade-in">
           <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-primary">person</span>
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[20px]">person</span>
+            </div>
             <h2 className="text-base font-bold">Seus Dados</h2>
           </div>
           <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1">Seu Nome</label>
-              <input
-                type="text"
-                name="name"
-                placeholder="Como devemos te chamar?"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-dark-text-secondary/20"
-              />
+            <div className="space-y-1.5 group">
+              <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1 group-focus-within:text-primary transition-colors">Seu Nome</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Como devemos te chamar?"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all placeholder:text-dark-text-secondary/20"
+                />
+                {formData.name.trim().length >= 3 && (
+                  <span className="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-sm animate-in fade-in zoom-in">check_circle</span>
+                )}
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1">Seu WhatsApp / Telefone</label>
-              <input
-                type="text"
-                name="phone"
-                placeholder="(00) 00000-0000"
-                value={formData.phone}
-                onChange={handleInputChange}
-                className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-dark-text-secondary/20"
-              />
+            <div className="space-y-1.5 group">
+              <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1 group-focus-within:text-primary transition-colors">Seu WhatsApp / Telefone</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="phone"
+                  placeholder="(00) 00000-0000"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all placeholder:text-dark-text-secondary/20"
+                />
+                {formData.phone.trim().length >= 14 && (
+                  <span className="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-sm">check_circle</span>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -179,25 +221,29 @@ const Checkout: React.FC<CheckoutProps> = ({
           </div>
 
           {scheduledTime && (
-            <div className="mt-4 bg-primary/5 border border-primary/20 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                  <span className="material-icons-round text-sm">event_available</span>
+            <div className="mt-4 bg-primary/5 border border-primary/20 p-5 rounded-3xl flex items-center justify-between animate-fade-in ring-1 ring-primary/10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-lg shadow-primary/5">
+                  <span className="material-icons-round text-xl">event_available</span>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Horário Reservado</p>
-                  <p className="text-sm font-bold">{scheduledTime.date} • {scheduledTime.time}</p>
+                  <p className="text-[10px] font-black uppercase text-primary tracking-[0.15em] mb-0.5">Horário Reservado</p>
+                  <p className="text-sm font-bold text-white/90">{scheduledTime.date} • {scheduledTime.time}</p>
                 </div>
               </div>
-              <button onClick={onSelectSchedule} className="text-primary"><span className="material-icons-round">edit</span></button>
+              <button onClick={onSelectSchedule} className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-primary active:scale-90 transition-all">
+                <span className="material-icons-round text-lg">edit_calendar</span>
+              </button>
             </div>
           )}
         </section>
 
         {!scheduledTime && (
-          <section>
+          <section className="animate-fade-in" style={{ animationDelay: '100ms' }}>
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-primary">location_on</span>
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined text-[20px]">location_on</span>
+              </div>
               <h2 className="text-base font-bold">Informações de Entrega</h2>
             </div>
             <div className="space-y-4">
@@ -245,38 +291,42 @@ const Checkout: React.FC<CheckoutProps> = ({
                 )}
               </div>
               <div className="grid grid-cols-4 gap-3">
-                <div className="col-span-3 space-y-1">
-                  <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1">Rua/Avenida</label>
-
-                  <input
-                    type="text"
-                    name="street"
-                    value={formData.street}
-                    onChange={handleInputChange}
-                    className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary outline-none"
-                  />
+                <div className="col-span-3 space-y-1.5 group">
+                  <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1 group-focus-within:text-primary transition-colors">Rua / Avenida</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="street"
+                      value={formData.street}
+                      onChange={handleInputChange}
+                      className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all"
+                    />
+                    {formData.street.trim().length >= 5 && (
+                      <span className="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-sm">check_circle</span>
+                    )}
+                  </div>
                 </div>
-                <div className="col-span-1 space-y-1">
-                  <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1">Nº</label>
+                <div className="col-span-1 space-y-1.5 group">
+                  <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1 group-focus-within:text-primary transition-colors">Nº</label>
                   <input
                     type="text"
                     name="number"
                     value={formData.number}
                     onChange={handleInputChange}
-                    className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                    className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none text-center transition-all"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1">Complemento</label>
+              <div className="space-y-1.5 group">
+                <label className="text-[10px] font-black uppercase text-dark-text-secondary ml-1 group-focus-within:text-primary transition-colors">Complemento</label>
                 <input
                   type="text"
                   name="complement"
                   value={formData.complement}
                   onChange={handleInputChange}
-                  placeholder="Apto, Bloco, etc."
-                  className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                  placeholder="Apto, Bloco, Casa, etc."
+                  className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all"
                 />
               </div>
             </div>
@@ -284,9 +334,11 @@ const Checkout: React.FC<CheckoutProps> = ({
         )}
 
         {/* Observations */}
-        <section>
+        <section className="animate-fade-in" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-primary">notes</span>
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[20px]">notes</span>
+            </div>
             <h2 className="text-base font-bold">Observações do Pedido</h2>
           </div>
           <textarea
@@ -295,14 +347,16 @@ const Checkout: React.FC<CheckoutProps> = ({
             onChange={handleInputChange}
             placeholder="Ex: Tirar cebola, maionese à parte..."
             rows={3}
-            className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none"
+            className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none resize-none transition-all placeholder:text-dark-text-secondary/20"
           />
         </section>
 
         {/* Payment */}
-        <section>
+        <section className="animate-fade-in" style={{ animationDelay: '300ms' }}>
           <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-primary">payments</span>
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[20px]">payments</span>
+            </div>
             <h2 className="text-base font-bold">Forma de Pagamento</h2>
           </div>
           <div className="space-y-3">

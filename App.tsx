@@ -74,6 +74,18 @@ const App: React.FC = () => {
   }, [cart]);
 
   useEffect(() => {
+    localStorage.setItem('oe_preferred_payment', preferredPayment);
+  }, [preferredPayment]);
+
+  useEffect(() => {
+    if (savedAddress) {
+      localStorage.setItem('oe_saved_address', JSON.stringify(savedAddress));
+    } else {
+      localStorage.removeItem('oe_saved_address');
+    }
+  }, [savedAddress]);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
@@ -84,6 +96,22 @@ const App: React.FC = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (userName && userPhone.length >= 14) {
+      const timer = setTimeout(async () => {
+        try {
+          await supabase.from('customers').upsert({
+            phone: userPhone,
+            name: userName
+          }, { onConflict: 'phone' });
+        } catch (e) {
+          console.warn("Silent background persist failed:", e);
+        }
+      }, 5000); // 5s debounce
+      return () => clearTimeout(timer);
+    }
+  }, [userName, userPhone]);
 
   useEffect(() => {
     fetchProducts();
@@ -498,11 +526,9 @@ const App: React.FC = () => {
 
       // Tenta salvar o cliente silenciosamente (pode falhar por RLS, mas não deve travar o pedido)
       try {
-        await supabase.from('clients').upsert({
+        await supabase.from('customers').upsert({
           phone: orderData.phone,
-          name: orderData.name || userName,
-          neighborhood: orderData.neighborhood,
-          address: `${orderData.street}, ${orderData.number}`
+          name: orderData.name || userName
         }, { onConflict: 'phone' });
       } catch (e) {
         console.warn("Erro ao salvar perfil do cliente (não crítico):", e);
@@ -690,6 +716,10 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             initialAddress={savedAddress}
             deliveryFees={deliveryFees}
             isLoading={loading}
+            onUpdateName={setUserName}
+            onUpdatePhone={setUserPhone}
+            onUpdateAddress={setSavedAddress}
+            onUpdatePayment={setPreferredPayment}
           />
         );
       case 'scheduling':
