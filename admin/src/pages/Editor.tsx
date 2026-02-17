@@ -1202,7 +1202,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     <p className="text-[11px] font-bold text-white/80 leading-tight">
                                         {order.is_pickup ? 'RETIRADA NO LOCAL' : `${order.delivery_address}`}
                                     </p>
-                                    {!order.is_pickup && <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">{order.neighborhood} • {order.zip_code}</p>}
+                                    {!order.is_pickup && <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">{order.neighborhood} {order.zip_code ? `• ${order.zip_code}` : ''}</p>}
                                 </div>
                             </div>
 
