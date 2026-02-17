@@ -325,7 +325,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         const fallbackInterval = setInterval(() => {
             fetchOrders();
             onRefresh?.();
-        }, 60000);
+        }, 30000);
 
         return () => {
             supabase.removeChannel(channel);
@@ -1952,42 +1952,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                         </div>
                     </div>
 
-                    {/* Store Status Section - Desktop Version (Matching Mobile) */}
-                    <div className="bg-[#1A0F0A] border border-white/5 rounded-3xl p-6 flex items-center justify-between gap-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                                <span className="material-icons-round text-2xl">schedule</span>
-                            </div>
-                            <div>
-                                <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mb-0.5">Gestão de Disponibilidade</p>
-                                <p className="text-[11px] font-black text-primary uppercase tracking-wide">Controle da Loja</p>
-                            </div>
-                        </div>
 
-                        <div className="flex bg-dark-bg p-1.5 rounded-2xl border border-white/5 flex-1 max-w-md">
-                            <button
-                                onClick={() => handleUpdateStoreStatus('open')}
-                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${storeStatus === 'open' ? 'bg-emerald-500 text-dark-bg shadow-lg shadow-emerald-500/20' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
-                            >
-                                <span className="material-icons-round text-base">check_circle</span>
-                                Aberto
-                            </button>
-                            <button
-                                onClick={() => handleUpdateStoreStatus('auto')}
-                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${storeStatus === 'auto' ? 'bg-amber-500 text-dark-bg shadow-lg shadow-amber-500/20' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
-                            >
-                                <span className="material-icons-round text-base">schedule</span>
-                                Auto
-                            </button>
-                            <button
-                                onClick={() => handleUpdateStoreStatus('closed')}
-                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${storeStatus === 'closed' ? 'bg-rose-500 text-dark-bg shadow-lg shadow-rose-500/20' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
-                            >
-                                <span className="material-icons-round text-base">block</span>
-                                Fechado
-                            </button>
-                        </div>
-                    </div>
                 </header>
 
                 <div className="px-6 py-4 md:p-10 pb-32 md:pb-10 flex-1 overflow-y-auto no-scrollbar">
