@@ -281,6 +281,13 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Ref para acompanhar o status atual dentro do callback do realtime (evita stale closure)
+  const storeStatusRef = useRef(storeStatus);
+
+  useEffect(() => {
+    storeStatusRef.current = storeStatus;
+  }, [storeStatus]);
+
   // Real-time listener for app data synchronization
   useEffect(() => {
     const channel = supabase
@@ -288,9 +295,12 @@ const App: React.FC = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'store_config', filter: 'key=eq.store_status' },
-        (payload) => {
-          if (payload.new && (payload.new as any).value) {
-            setStoreStatus((payload.new as any).value);
+        (payload: any) => {
+          const newStatus = (payload.new as any)?.value;
+          // Se o status mudou em relação ao atual, recarrega a página para garantir atualização completa
+          if (newStatus && newStatus !== storeStatusRef.current) {
+            console.log('Status da loja alterado. Atualizando página...');
+            window.location.reload();
           }
         }
       )
