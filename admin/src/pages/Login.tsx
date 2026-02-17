@@ -92,7 +92,9 @@ const Login: React.FC<LoginProps> = ({ onBack, onLogin, onRegister }) => {
       </main>
 
       <footer className="mt-auto pt-8 text-center opacity-30">
-        <p className="text-[10px] uppercase font-black tracking-widest">OE Burguer's System v2.0</p>
+        <p className="text-[10px] uppercase font-black tracking-widest">
+          criado por <a href="https://wa.me/5521965226788" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">cviolla</a>
+        </p>
       </footer>
     </div>
   );
