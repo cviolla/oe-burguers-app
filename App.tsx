@@ -1089,12 +1089,11 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'Pagamento via: PIX\n2197272
           onLogout={handleLogout}
         />
       )}
-      {cart.length > 0 && (
-        <WhatsAppMovable />
+      {cart.length > 0 && currentView !== 'checkout' && (
+        <WhatsAppMovable isVisible={true} />
       )}
 
       <CustomDialog config={dialog} />
-      <WhatsAppMovable isVisible={currentView !== 'checkout'} />
     </div>
   );
 };
@@ -1218,6 +1217,7 @@ const WhatsAppMovable: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onContextMenu={(e) => e.preventDefault()}
       onClick={(e) => {
         if (isDragging) e.preventDefault(); // Evita abrir link se estiver apenas arrastando
       }}
