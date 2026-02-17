@@ -34,8 +34,8 @@ const Login: React.FC<LoginProps> = ({ onBack, onLogin, onRegister }) => {
   return (
     <div className="min-h-screen bg-dark-bg flex flex-col px-8 py-12 justify-center">
       <header className="mb-12 text-center">
-        <h1 className="text-3xl font-black mb-2 text-primary">OE Admin</h1>
-        <p className="text-dark-text-secondary text-sm">Acesso Restrito</p>
+        <img src="/admin-logo.png" alt="OE Admin" className="w-32 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(255,183,0,0.3)]" />
+        <p className="text-dark-text-secondary text-sm font-bold tracking-widest uppercase">Acesso Restrito</p>
       </header>
 
       <main className="flex-1 flex flex-col gap-6 max-w-sm mx-auto w-full">
