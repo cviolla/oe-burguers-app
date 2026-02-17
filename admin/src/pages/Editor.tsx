@@ -1021,14 +1021,14 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const renderTabs = () => (
         <div className="fixed bottom-0 left-0 right-0 z-50 md:static md:w-64 md:h-screen transition-all duration-500">
-            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-3xl border-t border-white/5 p-4 md:p-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:border-t-0 md:border-r md:border-white/10 md:justify-start md:gap-4 md:pt-16 md:px-4 md:overflow-y-auto custom-scrollbar md:rounded-none">
+            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-3xl border-t border-white/5 p-4 md:p-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:border-t-0 md:border-r md:border-white/10 md:justify-start md:gap-4 md:pt-8 md:px-4 md:overflow-y-auto custom-scrollbar md:rounded-none">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] md:hidden"></div>
 
                 {/* Desktop Logo Area */}
-                <div className="hidden md:flex flex-col items-center mb-16 w-full px-4 text-center">
-                    <img src="/admin-logo.png" className="w-24 h-24 object-contain mb-6 drop-shadow-[0_0_20px_rgba(255,183,0,0.1)]" alt="OE Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.logo-fallback')?.classList.remove('hidden'); }} />
-                    <div className="logo-fallback hidden w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-6">
-                        <span className="material-icons-round text-primary text-5xl">admin_panel_settings</span>
+                <div className="hidden md:flex flex-col items-center mb-8 w-full px-4 text-center">
+                    <img src="/admin-logo.png" className="w-36 h-36 object-contain mb-4 drop-shadow-[0_0_30px_rgba(255,183,0,0.15)]" alt="OE Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.logo-fallback')?.classList.remove('hidden'); }} />
+                    <div className="logo-fallback hidden w-36 h-36 rounded-3xl bg-primary/10 flex items-center justify-center mb-4">
+                        <span className="material-icons-round text-primary text-6xl">admin_panel_settings</span>
                     </div>
                     <h2 className="text-base font-black text-white uppercase tracking-tighter">OE Administração</h2>
                     <p className="text-[8px] text-primary font-black uppercase tracking-[0.5em] opacity-60">Control Panel v2</p>
@@ -1815,9 +1815,6 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             {/* Super Header (Mobile only) */}
             <header className="px-6 py-6 flex items-center justify-between sticky top-0 bg-dark-bg/60 backdrop-blur-3xl z-50 border-b border-white/5 md:hidden">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="w-10 h-10 aspect-square shrink-0 rounded-xl bg-dark-card border border-white/5 flex items-center justify-center text-primary active:scale-90 transition-all shadow-2xl">
-                        <span className="material-icons-round text-lg">arrow_back</span>
-                    </button>
                     <div className="space-y-0.5">
                         <h1 className="text-[1rem] font-black uppercase tracking-tighter leading-none">OE Administração</h1>
                         <p className="text-[7px] text-primary/40 font-black uppercase tracking-[0.4em]">Painel de Controle</p>
@@ -1888,11 +1885,14 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 </div>
             </main>
 
-            {/* Order Detail Modal */}
             {selectedOrder && (
-                <div className="fixed inset-0 z-[100] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-4 animate-in fade-in duration-500">
-                    <div className="w-full max-w-lg bg-dark-card border border-white/10 rounded-lg shadow-[0_0_100px_rgba(0,0,0,0.8)] max-h-[95vh] flex flex-col animate-in zoom-in-95 duration-500">
-                        <div className="p-6 pb-4 flex items-center justify-between border-b border-white/5">
+                <div className="fixed inset-0 z-[100] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+                    <div
+                        className="absolute inset-0 bg-black/40"
+                        onClick={() => setSelectedOrder(null)}
+                    />
+                    <div className="w-full max-w-lg bg-dark-card border border-white/10 rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] max-h-[90vh] flex flex-col relative z-10 overflow-hidden animate-in zoom-in-95 duration-500">
+                        <div className="p-8 pb-4 flex items-center justify-between">
                             <div className="space-y-0.5">
                                 <h3 className="text-[1.4rem] font-black uppercase tracking-tighter  leading-none">Detalhes do Pedido</h3>
                                 <p className="text-[9px] text-primary font-black uppercase tracking-widest ml-1">#{selectedOrder.short_id} • {selectedOrder.status}</p>
@@ -2034,11 +2034,14 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 </div>
             )}
 
-            {/* Modal de Edição (Estilizado para o Novo Tema) */}
             {editingItem && (
-                <div className="fixed inset-0 z-[100] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-4 animate-in fade-in duration-500">
-                    <div className="w-full max-w-lg bg-dark-card border border-white/10 rounded-lg shadow-[0_0_100px_rgba(0,0,0,0.8)] max-h-[95vh] flex flex-col animate-in zoom-in-95 duration-500">
-                        <div className="p-6 pb-4 flex items-center justify-between border-b border-white/5">
+                <div className="fixed inset-0 z-[100] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+                    <div
+                        className="absolute inset-0 bg-black/40"
+                        onClick={() => setEditingItem(null)}
+                    />
+                    <div className="w-full max-w-lg bg-dark-card border border-white/10 rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] max-h-[90vh] flex flex-col relative z-10 overflow-hidden animate-in zoom-in-95 duration-500">
+                        <div className="p-8 pb-4 flex items-center justify-between">
                             <div className="space-y-0.5">
                                 <h3 className="text-[1.4rem] font-black uppercase tracking-tighter  leading-none">Ajustes Finos</h3>
                                 <p className="text-[9px] text-white/20 font-black uppercase tracking-widest ml-1">Configuração de produto</p>
@@ -2175,9 +2178,13 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             {/* Modal de Edição de Taxa de Entrega */}
             {
                 editingFee && (
-                    <div className="fixed inset-0 z-[110] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-4 animate-in fade-in duration-500">
-                        <div className="w-full max-w-md bg-dark-card border border-white/10 rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden animate-in zoom-in-95 duration-500">
-                            <div className="p-6 pb-4 flex items-center justify-between border-b border-white/5">
+                    <div className="fixed inset-0 z-[110] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+                        <div
+                            className="absolute inset-0 bg-black/40"
+                            onClick={() => setEditingFee(null)}
+                        />
+                        <div className="w-full max-w-md bg-dark-card border border-white/10 rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden relative z-10 animate-in zoom-in-95 duration-500">
+                            <div className="p-8 pb-4 flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <h3 className="text-lg font-black uppercase tracking-tighter  leading-none text-primary">Ajustar Região</h3>
                                     <p className="text-[9px] text-white/20 font-black uppercase tracking-widest ml-1">Configuração de logística</p>
@@ -2227,9 +2234,13 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             {/* Modal de Edição de Adicional */}
             {
                 editingAddon && (
-                    <div className="fixed inset-0 z-[110] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-4 animate-in fade-in duration-500">
-                        <div className="w-full max-w-md bg-dark-card border border-white/10 rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden animate-in zoom-in-95 duration-500">
-                            <div className="p-6 pb-4 flex items-center justify-between border-b border-white/5">
+                    <div className="fixed inset-0 z-[110] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+                        <div
+                            className="absolute inset-0 bg-black/40"
+                            onClick={() => setEditingAddon(null)}
+                        />
+                        <div className="w-full max-w-md bg-dark-card border border-white/10 rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden relative z-10 animate-in zoom-in-95 duration-500">
+                            <div className="p-8 pb-4 flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <h3 className="text-lg font-black uppercase tracking-tighter leading-none text-primary">Editar Adicional</h3>
                                     <p className="text-[9px] text-white/20 font-black uppercase tracking-widest ml-1">Ajuste de preço e nome</p>
