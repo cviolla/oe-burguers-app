@@ -1026,7 +1026,10 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
                 {/* Desktop Logo Placeholder */}
                 <div className="hidden md:flex flex-col items-center mb-10 w-full px-4 text-center">
-                    <img src="/logo.png" className="w-16 h-16 object-contain mb-4" alt="OE Logo" />
+                    <img src="/admin-logo.png" className="w-16 h-16 object-contain mb-4" alt="OE Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.logo-fallback')?.classList.remove('hidden'); }} />
+                    <div className="logo-fallback hidden w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                        <span className="material-icons-round text-primary text-3xl">admin_panel_settings</span>
+                    </div>
                     <h2 className="text-sm font-black text-white uppercase tracking-tighter">OE Administração</h2>
                     <p className="text-[7px] text-primary font-black uppercase tracking-[0.4em] opacity-60">Control Panel v2</p>
                 </div>
