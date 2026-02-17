@@ -121,19 +121,21 @@ const Home: React.FC<HomeProps> = ({ userName, products, onProductClick, onLogou
       <div className="sticky top-0 z-50 bg-[#130707] border-b border-white/5 shadow-2xl">
         <header className="px-6 pt-10 pb-4 flex items-center justify-between">
           <div>
-            <span className="text-[10px] text-primary font-black uppercase tracking-[0.4em] block mb-1">OE BURGUERS</span>
-            <h1 className="text-2xl font-black tracking-tight text-white leading-none">Olá, {userName}</h1>
+            <h1 className="text-2xl font-black tracking-tight text-white leading-none mb-3">Olá, {userName}</h1>
 
-
-            <a
-              href="https://www.google.com/maps/search/?api=1&query=Praça+Nossa+Sra.+das+Gracas+-+Ponta+Negra,+Maricá+-+RJ,+Brasil"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[9px] text-primary hover:opacity-80 transition-all mt-2.5 font-black uppercase tracking-wider group"
-            >
-              <span className="material-icons-round text-xs group-hover:scale-110 transition-transform">location_on</span>
-              Praça N. Sra. das Graças
-            </a>
+            <div className="flex items-center gap-3">
+              <span className="text-[9px] text-primary font-black uppercase tracking-[0.4em] whitespace-nowrap">OE BURGUERS</span>
+              <span className="w-1 h-1 bg-white/20 rounded-full flex-shrink-0"></span>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Praça+Nossa+Sra.+das+Gracas+-+Ponta+Negra,+Maricá+-+RJ,+Brasil"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[9px] text-primary hover:opacity-80 transition-all font-black uppercase tracking-wider group whitespace-nowrap"
+              >
+                <span className="material-icons-round text-[10px] group-hover:scale-110 transition-transform">location_on</span>
+                Praça N. Sra. das Graças
+              </a>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-end gap-1.5">
