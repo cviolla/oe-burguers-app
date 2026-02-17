@@ -62,6 +62,8 @@ const App: React.FC = () => {
   const [productAddons, setProductAddons] = useState<any[]>([]);
   const [isAddonsVisible, setIsAddonsVisible] = useState(true);
   const [storeStatus, setStoreStatus] = useState<'auto' | 'open' | 'closed'>('auto');
+  const [categories, setCategories] = useState<string[]>(['Destaques', 'Burgers', 'Combos', 'Batata-frita', 'Promoções', 'Sobremesas', 'Bebidas', 'Porções', 'Combo na Caixa']);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [addresses, setAddresses] = useState<any[]>(() => {
@@ -214,6 +216,7 @@ const App: React.FC = () => {
     fetchDeliveryFees();
     fetchAddons();
     fetchStoreStatus();
+    fetchCategories();
 
     // Limpar nomes de teste do localStorage se existirem
     const cachedName = localStorage.getItem('oe_user_name');
@@ -255,6 +258,11 @@ const App: React.FC = () => {
     };
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
 
+    // Initial fetch for orders if phone exists
+    if (userPhone) {
+      fetchUserOrders(userPhone);
+    }
+
     return () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('click', requestNotificationPermission);
@@ -262,22 +270,52 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Real-time listener for store status
+  // Real-time listener for app data synchronization
   useEffect(() => {
     const channel = supabase
-      .channel('store-config-changes')
+      .channel('app-realtime-sync')
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'store_config',
-          filter: 'key=eq.store_status'
-        },
+        { event: '*', schema: 'public', table: 'store_config', filter: 'key=eq.store_status' },
         (payload) => {
           if (payload.new && (payload.new as any).value) {
             setStoreStatus((payload.new as any).value);
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'items' },
+        () => fetchProducts()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'item_variants' },
+        () => fetchProducts()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'delivery_fees' },
+        () => fetchDeliveryFees()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'options' },
+        () => fetchAddons()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'categories' },
+        () => {
+          fetchCategories();
+          fetchProducts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          if (userPhone) fetchUserOrders(userPhone);
         }
       )
       .subscribe();
@@ -285,7 +323,7 @@ const App: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [userPhone]);
 
   useEffect(() => {
     const checkOpenStatus = () => {
@@ -464,6 +502,38 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error("Erro ao buscar status da loja:", err);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('name')
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        const catNames = ['Destaques', ...data.map(c => c.name)];
+        setCategories(catNames);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar categorias:", err);
+    }
+  };
+
+  const fetchUserOrders = async (phone: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .eq('client_phone', phone)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) setUserOrders(data);
+    } catch (err) {
+      console.error("Erro ao buscar pedidos do usuário:", err);
     }
   };
 
@@ -783,6 +853,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
           <Home
             userName={userName}
             products={products}
+            categoriesFromDB={categories}
             onProductClick={navigateToProduct}
             onLogout={handleLogout}
             cart={cart}
@@ -877,6 +948,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             userPhone={userPhone}
             preferredPayment={preferredPayment}
             savedAddress={savedAddress}
+            userOrders={userOrders}
             onBack={() => setCurrentView('home')}
             onSettings={() => setCurrentView('settings')}
             onHistory={() => setCurrentView('order_history')}
@@ -890,9 +962,13 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
           />
         );
       case 'order_history':
-        return <OrderHistory onBack={() => setCurrentView('profile')} onRepeatOrder={(order) => {
-          const p = products.find(prod => order.items.includes(prod.name)) || products[0];
-          addToCart(p, 1);
+        return <OrderHistory onBack={() => setCurrentView('profile')} userOrders={userOrders} onRepeatOrder={(order) => {
+          // Simplificando o repetir pedido para pegar o primeiro item encontrado no catálogo
+          const firstItem = order.order_items?.[0];
+          if (firstItem) {
+            const product = products.find(p => p.name === firstItem.product_name);
+            if (product) addToCart(product, 1);
+          }
         }} />;
       case 'addresses':
         return <Addresses onBack={() => setCurrentView('settings')} addresses={addresses} setAddresses={setAddresses} deliveryFees={deliveryFees} showAlert={showAlert} showConfirm={showConfirm} />;

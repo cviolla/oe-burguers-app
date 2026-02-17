@@ -14,6 +14,9 @@ interface ProfileProps {
   savedAddress?: any;
   deferredPrompt?: any;
   onPromptUsed?: () => void;
+  userOrders?: any[];
+  showAlert?: (title: string, message: string, icon?: string) => void;
+  showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -27,9 +30,10 @@ const Profile: React.FC<ProfileProps> = ({
   preferredPayment,
   savedAddress,
   deferredPrompt,
-  onPromptUsed
+  onPromptUsed,
+  userOrders = []
 }) => {
-  const lastOrders: any[] = [];
+  const lastOrders = userOrders.slice(0, 3); // Pegar os 3 mais recentes
 
   return (
     <div className="pb-32">
@@ -57,7 +61,7 @@ const Profile: React.FC<ProfileProps> = ({
           <div className="bg-dark-card py-3 px-6 rounded-[1.5rem] border border-white/5 shadow-lg flex items-center justify-between">
             <div className="text-left">
               <span className="text-[10px] font-black uppercase text-dark-text-secondary tracking-widest block">Total de Pedidos</span>
-              <span className="text-primary text-2xl font-black block leading-none mt-1">0</span>
+              <span className="text-primary text-2xl font-black block leading-none mt-1">{userOrders.length}</span>
             </div>
             <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <span className="material-icons-round text-xl">shopping_bag</span>
@@ -83,25 +87,27 @@ const Profile: React.FC<ProfileProps> = ({
                 <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest">Sem pedidos</p>
               </div>
             ) : (
-              [1, 2].map(i => (
-                <div key={i} className="bg-dark-card p-4 rounded-3xl border border-white/5 shadow-lg">
+              lastOrders.map(order => (
+                <div key={order.id} className="bg-dark-card p-4 rounded-3xl border border-white/5 shadow-lg">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-primary">
                         <span className="material-icons-round">lunch_dining</span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">Pedido #894{i}</h4>
-                        <p className="text-[10px] text-dark-text-secondary">{i === 1 ? 'Hoje às 19:45' : 'Ontem às 21:20'}</p>
+                        <h4 className="font-bold text-sm">Pedido #{order.short_id || order.id.slice(0, 5)}</h4>
+                        <p className="text-[10px] text-dark-text-secondary">{new Date(order.created_at).toLocaleDateString('pt-BR')} às {new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
-                    <span className="bg-green-500/10 text-green-400 text-[8px] font-black px-2 py-1 rounded uppercase">Entregue</span>
+                    <span className={`text-[8px] font-black px-2 py-1 rounded uppercase ${order.status === 'finalizado' ? 'bg-green-500/10 text-green-400' : 'bg-primary/10 text-primary'}`}>
+                      {order.status}
+                    </span>
                   </div>
                   <div className="border-t border-white/5 py-3 mb-3">
-                    <p className="text-[10px] text-dark-text-secondary leading-relaxed">
-                      1x Super OE Bacon Duplo, 1x Batata M, 1x Coca-Cola Zero
+                    <p className="text-[10px] text-dark-text-secondary leading-relaxed line-clamp-2">
+                      {order.order_items?.map((item: any) => `${item.quantity}x ${item.product_name}`).join(', ') || 'Sem itens listados'}
                     </p>
-                    <p className="text-sm font-black mt-1">R$ 42,90</p>
+                    <p className="text-sm font-black mt-1">R$ {(order.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="flex gap-2">
                     <button className="flex-1 bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-primary/20">Repetir Pedido</button>
@@ -130,11 +136,11 @@ const Profile: React.FC<ProfileProps> = ({
                       <span className="material-icons-round text-lg">receipt_long</span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm">{order.item}</h4>
-                      <p className="text-[10px] text-dark-text-secondary">{order.date} • {order.id}</p>
+                      <h4 className="font-bold text-sm">Pedido #{order.short_id || order.id.slice(0, 5)}</h4>
+                      <p className="text-[10px] text-dark-text-secondary">{new Date(order.created_at).toLocaleDateString('pt-BR')}</p>
                     </div>
                   </div>
-                  <span className="text-sm font-black text-white">R$ {order.total}</span>
+                  <span className="text-sm font-black text-white">R$ {(order.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               ))}
             </div>

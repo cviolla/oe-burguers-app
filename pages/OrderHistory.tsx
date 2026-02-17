@@ -14,19 +14,17 @@ interface Order {
 
 interface OrderHistoryProps {
   onBack: () => void;
-  onRepeatOrder: (order: Order) => void;
+  onRepeatOrder: (order: any) => void;
+  userOrders?: any[];
 }
 
-const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack, onRepeatOrder }) => {
+const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack, onRepeatOrder, userOrders = [] }) => {
   const [activeFilter, setActiveFilter] = useState<number>(0); // 0: Tudo, 7, 30, 90 dias
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Datas mockadas para o exemplo (baseado na data atual)
+  // Datas reais baseadas no created_at
   const now = Date.now();
   const dayInMs = 24 * 60 * 60 * 1000;
-
-  const MOCK_ORDERS: Order[] = [];
-
 
   const filters = [
     { label: 'Tudo', value: 0 },
@@ -36,15 +34,18 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack, onRepeatOrder }) =>
   ];
 
   const filteredOrders = useMemo(() => {
-    return MOCK_ORDERS.filter(order => {
-      const matchesSearch = searchMatch(order.items, searchQuery) || order.id.includes(searchQuery);
+    return userOrders.filter(order => {
+      const itemsList = order.order_items?.map((item: any) => item.product_name).join(', ') || '';
+      const matchesSearch = searchMatch(itemsList, searchQuery) || (order.short_id || '').includes(searchQuery);
+
       if (activeFilter === 0) return matchesSearch;
 
+      const orderTime = new Date(order.created_at).getTime();
       const filterMs = activeFilter * dayInMs;
-      const isWithinTime = (now - order.timestamp) <= filterMs;
+      const isWithinTime = (now - orderTime) <= filterMs;
       return matchesSearch && isWithinTime;
     });
-  }, [activeFilter, searchQuery, now, dayInMs]);
+  }, [activeFilter, searchQuery, userOrders, now, dayInMs]);
 
   return (
     <div className="min-h-screen bg-dark-bg flex flex-col pb-20">
@@ -105,26 +106,26 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack, onRepeatOrder }) =>
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 border border-white/5">
-                        <img src={order.image} alt="Pedido" className="w-full h-full object-cover" />
+                        <img src={order.order_items?.[0]?.image || 'https://via.placeholder.com/150'} alt="Pedido" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-sm text-white">Pedido {order.id}</h4>
-                          <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${order.status === 'Entregue' ? 'bg-green-500/10 text-green-500' :
-                            order.status === 'Cancelado' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
+                          <h4 className="font-bold text-sm text-white">Pedido #{order.short_id || order.id.slice(0, 5)}</h4>
+                          <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${order.status === 'finalizado' ? 'bg-green-500/10 text-green-500' :
+                            order.status === 'cancelado' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
                             }`}>
                             {order.status}
                           </span>
                         </div>
-                        <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest mt-0.5">{order.date}</p>
+                        <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest mt-0.5">{new Date(order.created_at).toLocaleDateString('pt-BR')} às {new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
-                    <span className="text-sm font-black text-white">R$ {order.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="text-sm font-black text-white">R$ {(order.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
 
                   <div className="bg-dark-bg/50 p-3 rounded-xl border border-white/5 mb-4">
                     <p className="text-[11px] text-dark-text-secondary leading-relaxed line-clamp-2">
-                      {order.items}
+                      {order.order_items?.map((item: any) => `${item.quantity}x ${item.product_name}`).join(', ') || 'Carrinho vazio ou itens não carregados'}
                     </p>
                   </div>
 

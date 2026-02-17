@@ -6,6 +6,7 @@ import { searchMatch } from '../utils';
 interface HomeProps {
   userName: string;
   products: Product[];
+  categoriesFromDB?: string[];
   onProductClick: (product: Product) => void;
   onLogout: () => void;
   cart: any[];
@@ -14,16 +15,18 @@ interface HomeProps {
   storeStatus?: 'auto' | 'open' | 'closed';
   isOpen: boolean;
   onOpenInfo: () => void;
+  showAlert?: (title: string, message: string, icon?: string) => void;
+  showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
+  showPrompt?: (title: string, message: string, defaultValue?: string, placeholder?: string, icon?: string) => Promise<string | null>;
 }
 
-const Home: React.FC<HomeProps> = ({ userName, products, onProductClick, onLogout, cart, onAddToCart, onUpdateQty, storeStatus = 'auto', isOpen, onOpenInfo }) => {
+const Home: React.FC<HomeProps> = ({ userName, products, categoriesFromDB, onProductClick, onLogout, cart, onAddToCart, onUpdateQty, storeStatus = 'auto', isOpen, onOpenInfo }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeCategory, setActiveCategory] = useState('Destaques');
 
-
-  const categories = ['Destaques', 'Burgers', 'Combos', 'Batata-frita', 'Promoções', 'Sobremesas', 'Bebidas', 'Porções', 'Combo na Caixa'];
+  const categories = categoriesFromDB || ['Destaques', 'Burgers', 'Combos', 'Batata-frita', 'Promoções', 'Sobremesas', 'Bebidas', 'Porções', 'Combo na Caixa'];
 
   useEffect(() => {
     const observerOptions = {

@@ -108,6 +108,52 @@ function App() {
   useEffect(() => {
     if (session) {
       refreshData();
+
+      // Real-time synchronization for admin dashboard catalog data
+      const channel = supabase
+        .channel('admin-catalog-sync')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'items' },
+          () => fetchProducts()
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'item_variants' },
+          () => fetchProducts()
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'delivery_fees' },
+          () => fetchDeliveryFees()
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'options' },
+          () => fetchAddons()
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'categories' },
+          () => {
+            fetchCategories?.(); // Caso categories esteja sendo buscado via refreshData
+            fetchProducts();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'store_config', filter: 'key=eq.store_status' },
+          (payload) => {
+            if (payload.new && (payload.new as any).value) {
+              setStoreStatus((payload.new as any).value);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [session]);
 
