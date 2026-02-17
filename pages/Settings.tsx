@@ -111,15 +111,6 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, onViewLegal, on
 
 
 
-        {/* Legal & Support Section */}
-        <section className="space-y-3">
-          <h2 className="text-[10px] font-black text-dark-text-secondary uppercase tracking-[0.2em] ml-1">Suporte e Legal</h2>
-          <div className="space-y-1.5">
-            <SettingItem icon="verified_user" label="Política de Privacidade" action={() => onViewLegal('privacy-policy')} />
-            <SettingItem icon="description" label="Termos de Uso" action={() => onViewLegal('terms-of-use')} />
-          </div>
-        </section>
-
         {/* Instalação do App - MOVED FROM PROFILE */}
         {typeof window !== 'undefined' && !window.matchMedia('(display-mode: standalone)').matches && (
           <section className="space-y-3">
@@ -180,6 +171,15 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, onViewLegal, on
             </div>
           </section>
         )}
+
+        {/* Legal & Support Section */}
+        <section className="space-y-3">
+          <h2 className="text-[10px] font-black text-dark-text-secondary uppercase tracking-[0.2em] ml-1">Suporte e Legal</h2>
+          <div className="space-y-1.5">
+            <SettingItem icon="verified_user" label="Política de Privacidade" action={() => onViewLegal('privacy-policy')} />
+            <SettingItem icon="description" label="Termos de Uso" action={() => onViewLegal('terms-of-use')} />
+          </div>
+        </section>
 
         <div className="pt-1 pb-10 flex flex-col items-center gap-4">
           <button
