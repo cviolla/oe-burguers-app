@@ -57,7 +57,7 @@ const Checkout: React.FC<CheckoutProps> = ({
     number: initialAddress?.number || '',
     neighborhood: initialAddress?.neighborhood || '',
     complement: initialAddress?.complement || '',
-    paymentMethod: initialPayment,
+    paymentMethod: '',
     observation: '',
     phone: initialPhone,
     name: initialName

@@ -1094,6 +1094,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'Pagamento via: PIX\n2197272
       )}
 
       <CustomDialog config={dialog} />
+      <WhatsAppMovable isVisible={currentView !== 'checkout'} />
     </div>
   );
 };
@@ -1167,8 +1168,8 @@ const CustomDialog: React.FC<{ config: DialogConfig }> = ({ config }) => {
   );
 };
 
-const WhatsAppMovable: React.FC = () => {
-  const [position, setPosition] = useState({ x: window.innerWidth - 80, y: window.innerHeight - 150 });
+const WhatsAppMovable: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
+  const [position, setPosition] = useState({ x: window.innerWidth - 80, y: 240 });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<HTMLAnchorElement>(null);
   const offset = useRef({ x: 0, y: 0 });
@@ -1198,13 +1199,15 @@ const WhatsAppMovable: React.FC = () => {
     setIsDragging(false);
   };
 
+  if (!isVisible) return null;
+
   return (
     <a
       ref={dragRef}
       href={`https://wa.me/5521972724360?text=${encodeURIComponent("Olá, vim do app OE Burguer's")}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="whatsapp-float group"
+      className="whatsapp-float group glass"
       style={{
         left: position.x,
         top: position.y,

@@ -73,6 +73,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     const [menuSubTab, setMenuSubTab] = useState<'products' | 'addons'>('products');
     const [editingAddon, setEditingAddon] = useState<any | null>(null);
     const [timeRange, setTimeRange] = useState<'7' | '15' | '30' | '90' | 'all'>('all');
+    const [pushEnabled, setPushEnabled] = useState(true);
 
     const filteredOrdersRange = React.useMemo(() => {
         if (timeRange === 'all') return orders;
@@ -255,11 +256,22 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
 
     useEffect(() => {
-        audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        // Alerta sonoro via Data URI (Bell sound) para evitar erros de 403/404
+        audioRef.current = new Audio('data:audio/mp3;base64,SUQzBAAAAAABEVRYWFhYAAAAHAAAAGNsYXVkaW8ubWUvYmVlcC9zb3VuZC8xMDU3LTMvVE9QRREAAAABVExFTgAAAAIAAAAyAFRQRTEAAAAbAAAAQmVlcCBzb3VuZCAtIGNsYXVkaW8ubWUvYmVlcC9UQUxCAAAADAAAAGJlZXAtc291bmQtMQBURVIBAAAAEAAAAGNvbnRhY3RAbXNvdW5kLm1lAFRDT04AAAAGAAAAYmVlcC8AVElUMgAAABAAAABCZWVwIFNvdW5kIC0gMQAA//7ExAAAAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUVNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVV//7ExA0AAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBVVVVVVVVVVVVVVVVVVVV//7ExByAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBVVVVVVVVVVVVVVVVVVVVVVVV');
         audioRef.current.loop = true;
 
         const handleInteraction = () => {
             setHasInteracted(true);
+            // Desbloqueia áudio no navegador
+            if (audioRef.current) {
+                audioRef.current.play().then(() => {
+                    audioRef.current.pause();
+                    audioRef.current.currentTime = 0;
+                }).catch(() => { });
+            }
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
             window.removeEventListener('click', handleInteraction);
         };
         window.addEventListener('click', handleInteraction);
@@ -285,11 +297,6 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     }, [newOrderAlert, hasInteracted]);
 
     useEffect(() => {
-        // Solicitar permissão de notificação se ainda não tiver
-        if (Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
-
         fetchCategories();
         fetchOrders();
         fetchCustomers();
@@ -301,7 +308,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     console.log('🔔 Novo pedido recebido:', payload.new);
                     setNewOrderAlert(payload.new);
 
-                    if (Notification.permission === 'granted') {
+                    if (pushEnabled && Notification.permission === 'granted') {
                         new Notification('🍔 NOVO PEDIDO!', {
                             body: `${payload.new.client_name} - R$ ${(payload.new.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
                             icon: '/favicon.ico'
@@ -1190,6 +1197,33 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] leading-tight opacity-40">Gestão de Disponibilidade</h3>
                             <p className="text-[9px] text-primary font-black uppercase tracking-[0.05em]">Controle da Loja</p>
                         </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => {
+                                if (audioRef.current) {
+                                    audioRef.current.play().then(() => {
+                                        setTimeout(() => {
+                                            if (audioRef.current) {
+                                                audioRef.current.pause();
+                                                audioRef.current.currentTime = 0;
+                                            }
+                                        }, 2000);
+                                    }).catch(console.error);
+                                }
+                            }}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-white/5 border-white/10 text-white/40 hover:text-primary transition-all active:scale-95"
+                            title="Testar Som de Alerta"
+                        >
+                            <span className="material-icons-round text-sm">volume_up</span>
+                        </button>
+                        <button
+                            onClick={() => setPushEnabled(!pushEnabled)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95 ${pushEnabled ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-white/10 text-white/20'}`}
+                        >
+                            <span className="material-icons-round text-sm">{pushEnabled ? 'notifications_active' : 'notifications_off'}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">{pushEnabled ? 'Push Ativo' : 'Push Inativo'}</span>
+                        </button>
                     </div>
                 </div>
 
@@ -2374,6 +2408,27 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </div>
                 )
             }
+            {/* Alerta de Novo Pedido (Som e Visual) */}
+            {newOrderAlert && (
+                <div className="fixed inset-0 z-[200] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+                    <div className="w-full max-w-sm bg-dark-card border border-primary/20 rounded-3xl shadow-[0_0_100px_rgba(255,183,0,0.2)] p-10 text-center space-y-8 animate-in zoom-in-95 duration-500">
+                        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
+                            <span className="material-icons-round text-6xl text-primary animate-bounce">notifications_active</span>
+                            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-black uppercase tracking-tighter">Novo Pedido Recebido!</h2>
+                            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">{newOrderAlert.client_name} acabou de fazer um pedido</p>
+                        </div>
+                        <button
+                            onClick={() => setNewOrderAlert(null)}
+                            className="w-full bg-primary py-5 rounded-2xl text-dark-bg font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all text-xs"
+                        >
+                            ENTENDIDO / PARAR SOM
+                        </button>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };

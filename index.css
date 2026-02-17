@@ -128,7 +128,10 @@ textarea {
     height: 60px;
     bottom: 100px;
     right: 20px;
-    background-color: #25d366;
+    background-color: rgba(37, 211, 102, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: #FFF !important;
     border-radius: 50px;
     text-align: center;
