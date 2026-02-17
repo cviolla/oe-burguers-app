@@ -285,33 +285,51 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     }, [newOrderAlert, hasInteracted]);
 
     useEffect(() => {
+        // Solicitar permissão de notificação se ainda não tiver
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
         fetchCategories();
         fetchOrders();
         fetchCustomers();
 
         const channel = supabase
-            .channel('admin_dashboard_v2')
+            .channel('admin_dashboard_v3')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
                 if (payload.eventType === 'INSERT') {
+                    console.log('🔔 Novo pedido recebido:', payload.new);
                     setNewOrderAlert(payload.new);
-                    // Notificação do Navegador
+
                     if (Notification.permission === 'granted') {
-                        new Notification('🍔 Novo Pedido!', {
-                            body: `${payload.new.client_name} acabou de fazer um pedido de R$ ${(payload.new.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-                            icon: '/logo.png',
-                            badge: '/favicon-site.png'
+                        new Notification('🍔 NOVO PEDIDO!', {
+                            body: `${payload.new.client_name} - R$ ${(payload.new.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+                            icon: '/favicon.ico'
                         });
                     }
                 }
                 fetchOrders();
+                onRefresh?.();
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
                 fetchCustomers();
             })
-            .subscribe();
+            .subscribe((status) => {
+                if (status === 'CHANNEL_ERROR') {
+                    console.error('❌ Erro na assinatura Realtime. Recarregando...');
+                    setTimeout(() => fetchOrders(), 5000);
+                }
+            });
+
+        // Fallback: Verificar novos pedidos a cada 60 segundos por segurança
+        const fallbackInterval = setInterval(() => {
+            fetchOrders();
+            onRefresh?.();
+        }, 60000);
 
         return () => {
             supabase.removeChannel(channel);
+            clearInterval(fallbackInterval);
         };
     }, []);
 
@@ -1169,19 +1187,14 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             </span>
                         </div>
                         <div className="space-y-0.5">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] leading-tight opacity-40">Status da Loja</h3>
-                            <div className="flex items-center gap-1.5">
-                                <span className={`w-1 h-1 rounded-full animate-pulse ${storeStatus === 'open' ? 'bg-emerald-500' : storeStatus === 'closed' ? 'bg-rose-500' : 'bg-primary'}`}></span>
-                                <p className="text-[9px] text-white font-black uppercase tracking-[0.05em]">
-                                    {storeStatus === 'auto' ? 'Automático' : storeStatus === 'open' ? 'Aberto Manual' : 'Fechado Manual'}
-                                </p>
-                            </div>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] leading-tight opacity-40">Gestão de Disponibilidade</h3>
+                            <p className="text-[9px] text-primary font-black uppercase tracking-[0.05em]">Controle da Loja</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Grid for more efficiency */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                     <button
                         onClick={() => handleUpdateStoreStatus('open')}
                         className={`py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.1em] transition-all duration-300 flex items-center justify-center gap-2 border ${storeStatus === 'open'
@@ -1191,6 +1204,17 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     >
                         <span className="material-icons-round text-base">check_circle</span>
                         Aberto
+                    </button>
+
+                    <button
+                        onClick={() => handleUpdateStoreStatus('auto')}
+                        className={`py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.1em] transition-all duration-300 flex items-center justify-center gap-2 border ${storeStatus === 'auto'
+                            ? 'bg-amber-500 border-amber-400 text-dark-bg shadow-lg shadow-amber-500/20'
+                            : 'bg-white/5 border-white/5 text-white/30 hover:text-amber-500'
+                            }`}
+                    >
+                        <span className="material-icons-round text-base">schedule</span>
+                        Auto
                     </button>
 
                     <button
@@ -1935,13 +1959,8 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                 <span className="material-icons-round text-2xl">schedule</span>
                             </div>
                             <div>
-                                <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mb-0.5">Status da Loja</p>
-                                <div className="flex items-center gap-2">
-                                    <span className={`w-2 h-2 rounded-full ${storeStatus === 'auto' ? 'bg-amber-500' : storeStatus === 'open' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`}></span>
-                                    <p className="text-sm font-black text-white uppercase tracking-wide">
-                                        {storeStatus === 'auto' ? 'Automático' : storeStatus === 'open' ? 'Aberta Manualmente' : 'Fechada Manualmente'}
-                                    </p>
-                                </div>
+                                <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mb-0.5">Gestão de Disponibilidade</p>
+                                <p className="text-[11px] font-black text-primary uppercase tracking-wide">Controle da Loja</p>
                             </div>
                         </div>
 

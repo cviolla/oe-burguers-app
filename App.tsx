@@ -51,7 +51,7 @@ const App: React.FC = () => {
   const [scheduledTime, setScheduledTime] = useState<ScheduledTime | null>(null);
   const [userName, setUserName] = useState<string>(() => localStorage.getItem('oe_user_name') || '');
   const [userPhone, setUserPhone] = useState<string>(() => localStorage.getItem('oe_user_phone') || '');
-  const [preferredPayment, setPreferredPayment] = useState<string>(() => localStorage.getItem('oe_preferred_payment') || 'pix');
+  const [preferredPayment, setPreferredPayment] = useState<string>(() => localStorage.getItem('oe_preferred_payment') || '');
   const [savedAddress, setSavedAddress] = useState<any>(() => {
     const saved = localStorage.getItem('oe_saved_address');
     return saved ? JSON.parse(saved) : null;
@@ -791,7 +791,7 @@ const App: React.FC = () => {
       }).join('\n\n');
       const orderId = orderDataTyped.short_id || orderDataTyped.id.slice(0, 5).toUpperCase();
 
-      const message = `👋 Venho de OE BURGUERS (https://oe-burguers.vercel.app)
+      const message = `👋 Venho do app OE BURGUERS
 #${orderId}
 🗓️ ${dateStr} ⏰ ${timeStr}
 
@@ -799,7 +799,8 @@ Tipo de serviço: ${scheduledTime ? 'Retirada' : 'Delivery'}
 
 Nome: ${orderData.name || userName}
 Telefone: ${orderData.phone}
-Endereço: ${orderData.neighborhood}, ${orderData.street} #${orderData.number} ${orderData.complement ? '- ' + orderData.complement : ''}
+Endereço: ${orderData.street} nº${orderData.number}${orderData.complement ? ' - ' + orderData.complement : ''}
+Bairro: ${orderData.neighborhood}
 
 📝 Produtos
 ${itemsList}
@@ -811,9 +812,9 @@ Total: R$ ${(totalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 
 💲 Pagamento
 Estado do pagamento: Não pago
 Total a pagar: R$ ${(totalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',') + '\n21972724360 Natany (itau) | Envie o comprovante para 21 97272-4360' : 'Pagamento via: ' + orderData.paymentMethod.toUpperCase()}
+${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'Pagamento via: PIX\n21972724360 Natany (itau) | Envie o comprovante para 21 97272-4360' : 'Pagamento via: ' + orderData.paymentMethod.toUpperCase()}
 
-👆 Por favor, envie-nos o comprovante do PIX. Assim que recebermos estaremos atendendo você.`;
+*Por favor, envie-nos o comprovante do PIX. Assim que recebermos estaremos atendendo você.*`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${storeWhatsApp}?text=${encodedMessage}`;

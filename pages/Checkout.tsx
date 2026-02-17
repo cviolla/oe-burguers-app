@@ -42,7 +42,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   onClearSchedule,
   initialName = '',
   initialPhone = '',
-  initialPayment = 'pix',
+  initialPayment = '',
   initialAddress = null,
   deliveryFees = [],
   isLoading = false,
@@ -79,7 +79,8 @@ const Checkout: React.FC<CheckoutProps> = ({
   const isFormValid = !!(
     formData.name.trim() &&
     formData.phone.trim().length >= 14 && // (00) 00000-0000
-    (scheduledTime ? true : (formData.street.trim() && formData.number.trim() && neighborhoodFee))
+    (scheduledTime ? true : (formData.street.trim() && formData.number.trim() && neighborhoodFee)) &&
+    formData.paymentMethod !== ''
   );
 
 
