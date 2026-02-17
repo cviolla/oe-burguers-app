@@ -95,9 +95,18 @@ const App: React.FC = () => {
           setDialog(prev => ({ ...prev, isOpen: false }));
           resolve();
         },
-        confirmText: 'Entendido'
+        confirmText: 'ENTENDIDO'
       });
     });
+  };
+
+  const handleNavigate = (view: AppView) => {
+    const restrictedViews = ['checkout', 'scheduling', 'cart'];
+    if (!isOpen && restrictedViews.includes(view)) {
+      showAlert("Loja Fechada", "A loja está fechada no momento. Por favor, volte durante nosso horário de funcionamento (18:00 às 00:30).", "lock_clock");
+      return;
+    }
+    setCurrentView(view);
   };
 
   const showConfirm = (title: string, message: string, confirmText = 'Confirmar', cancelText = 'Cancelar', icon = 'help_outline') => {
@@ -281,21 +290,13 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, [storeStatus]);
 
-  // Efeito para garantir que a página 'store_info' só apareça quando a loja estiver fechada
+  // Efeito para garantir que views restritas não sejam acessadas se a loja fechar subitamente
   useEffect(() => {
-    if (currentView === 'store_info') {
-      // Se a loja está aberta e o usuário está na store_info, manda para home
-      if (currentView === 'store_info') {
-        setCurrentView('home');
-      }
-    } else {
-      // Se a loja está fechada, redireciona para store_info apenas se o usuário tentar ir para o checkout ou agendamento
-      const restrictedViews = ['checkout', 'scheduling', 'cart'];
-      if (restrictedViews.includes(currentView)) {
-        setCurrentView('store_info');
-      }
+    const restrictedViews = ['checkout', 'scheduling', 'cart'];
+    if (!isOpen && restrictedViews.includes(currentView)) {
+      setCurrentView('home');
     }
-  }, [isOpen, currentView, userName]);
+  }, [isOpen, currentView]);
 
   useEffect(() => {
     // Só adiciona ao histórico se a view atual for diferente da última registrada
@@ -413,13 +414,13 @@ const App: React.FC = () => {
   const handleGlobalForward = () => {
     switch (currentView) {
       case 'onboarding':
-        setCurrentView('home');
+        handleNavigate('home');
         break;
       case 'cart':
-        if (cart.length > 0) setCurrentView('checkout');
+        if (cart.length > 0) handleNavigate('checkout');
         break;
       case 'home':
-        if (cart.length > 0) setCurrentView('cart');
+        if (cart.length > 0) handleNavigate('cart');
         break;
       // Adicionar outras navegações automáticas conforme necessário
     }
@@ -751,7 +752,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
           setCurrentView('legal');
         }} />;
       case 'login':
-        return <Login onBack={() => setCurrentView('onboarding')} onLogin={() => setCurrentView('home')} onResetPassword={() => { }} />;
+        return <Login onBack={() => handleNavigate('onboarding')} onLogin={() => handleNavigate('home')} onResetPassword={() => { }} />;
       case 'home':
         return (
           <Home
@@ -791,7 +792,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
           />
         ) : null;
       case 'cart':
-        return <Cart cartItems={cart} onUpdateQty={updateQuantity} onRemove={removeFromCart} onClear={clearCart} onCheckout={() => isOpen ? setCurrentView('checkout') : showAlert("Loja Fechada", "Não é possível finalizar o pedido com a loja fechada.", "lock_clock")} onBack={() => setCurrentView('home')} isOpen={isOpen} />;
+        return <Cart cartItems={cart} onUpdateQty={updateQuantity} onRemove={removeFromCart} onClear={clearCart} onCheckout={() => isOpen ? handleNavigate('checkout') : showAlert("Loja Fechada", "A loja está fechada no momento. Por favor, volte durante nosso horário de funcionamento (18:00 às 00:30).", "lock_clock")} onBack={() => handleNavigate('home')} isOpen={isOpen} />;
       case 'store_info':
         return (
           <StoreInfo
@@ -959,7 +960,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
       {showNavbar && (
         <Navbar
           currentView={currentView}
-          onNavigate={setCurrentView}
+          onNavigate={handleNavigate}
           cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
           onLogout={handleLogout}
         />
