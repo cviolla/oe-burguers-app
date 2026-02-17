@@ -1020,18 +1020,18 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const renderTabs = () => (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm md:static md:translate-x-0 md:w-64 md:h-screen md:max-w-none md:bottom-0 md:left-0 transition-all duration-500">
-            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-2xl border border-white/10 rounded-full p-2 lg:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:rounded-none md:justify-start md:gap-4 md:pt-12 md:px-4 md:overflow-y-auto custom-scrollbar">
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:static md:w-64 md:h-screen transition-all duration-500">
+            <nav className="bg-gradient-to-b from-[#2A1B12]/95 to-[#1A0F0A]/98 backdrop-blur-3xl border-t border-white/5 p-4 md:p-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex items-center justify-around relative overflow-hidden md:flex-col md:h-full md:border-t-0 md:border-r md:border-white/10 md:justify-start md:gap-4 md:pt-16 md:px-4 md:overflow-y-auto custom-scrollbar md:rounded-none">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] md:hidden"></div>
 
-                {/* Desktop Logo Placeholder */}
-                <div className="hidden md:flex flex-col items-center mb-10 w-full px-4 text-center">
-                    <img src="/admin-logo.png" className="w-16 h-16 object-contain mb-4" alt="OE Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.logo-fallback')?.classList.remove('hidden'); }} />
-                    <div className="logo-fallback hidden w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                        <span className="material-icons-round text-primary text-3xl">admin_panel_settings</span>
+                {/* Desktop Logo Area */}
+                <div className="hidden md:flex flex-col items-center mb-16 w-full px-4 text-center">
+                    <img src="/admin-logo.png" className="w-24 h-24 object-contain mb-6 drop-shadow-[0_0_20px_rgba(255,183,0,0.1)]" alt="OE Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.logo-fallback')?.classList.remove('hidden'); }} />
+                    <div className="logo-fallback hidden w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-6">
+                        <span className="material-icons-round text-primary text-5xl">admin_panel_settings</span>
                     </div>
-                    <h2 className="text-sm font-black text-white uppercase tracking-tighter">OE Administração</h2>
-                    <p className="text-[7px] text-primary font-black uppercase tracking-[0.4em] opacity-60">Control Panel v2</p>
+                    <h2 className="text-base font-black text-white uppercase tracking-tighter">OE Administração</h2>
+                    <p className="text-[8px] text-primary font-black uppercase tracking-[0.5em] opacity-60">Control Panel v2</p>
                 </div>
 
                 {[
@@ -1045,16 +1045,21 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as AdminTab)}
-                        className={`flex flex-col items-center gap-1 transition-all duration-300 relative group min-w-[45px] lg:min-w-[55px] md:flex-row md:w-full md:gap-4 md:px-5 md:py-4 md:rounded-2xl ${activeTab === tab.id
+                        className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative group min-w-[50px] md:flex-row md:w-full md:gap-4 md:px-6 md:py-5 md:rounded-2xl ${activeTab === tab.id
                             ? 'text-primary scale-110 md:bg-primary/10 md:scale-100 md:shadow-[inset_0_0_20px_rgba(255,183,0,0.05)]'
-                            : 'text-white/30 hover:text-white/60 md:hover:bg-white/5'
+                            : 'text-white/20 hover:text-white/50 md:hover:bg-white/5'
                             }`}
                     >
-                        <span className="material-icons-round text-xl transition-transform duration-300">
+                        <span className="material-icons-round text-2xl md:text-xl transition-transform duration-300">
                             {tab.icon}
                         </span>
-                        <span className="text-[8px] font-black uppercase tracking-[0.1em] leading-none mb-1 md:text-[10px] md:tracking-widest md:mb-0">
-                            {tab.label}
+                        <span className="text-[7px] font-black uppercase tracking-widest leading-none mb-1 md:text-[10px] md:mb-0">
+                            {tab.id === 'pdv' ? 'Acompanhar' :
+                                tab.id === 'vendas' ? 'Vendas' :
+                                    tab.id === 'clientes' ? 'Clientes' :
+                                        tab.id === 'cozinha' ? 'Cozinha' :
+                                            tab.id === 'cardapio' ? 'Cardápio' :
+                                                tab.id === 'logistica' ? 'Logística' : tab.label.split(' ')[0]}
                         </span>
 
                         {/* Desktop Active Indicator */}
@@ -1808,14 +1813,14 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 </div>
             )}
             {/* Super Header (Mobile only) */}
-            <header className="px-6 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-dark-bg/80 backdrop-blur-2xl z-50 border-b border-white/5 md:hidden">
+            <header className="px-6 py-6 flex items-center justify-between sticky top-0 bg-dark-bg/60 backdrop-blur-3xl z-50 border-b border-white/5 md:hidden">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="w-12 h-12 aspect-square shrink-0 rounded-full bg-dark-card border border-white/10 flex items-center justify-center text-primary active:scale-90 transition-all shadow-2xl hover:bg-primary hover:text-dark-bg hover:border-primary">
-                        <span className="material-icons-round text-xl">arrow_back</span>
+                    <button onClick={onBack} className="w-10 h-10 aspect-square shrink-0 rounded-xl bg-dark-card border border-white/5 flex items-center justify-center text-primary active:scale-90 transition-all shadow-2xl">
+                        <span className="material-icons-round text-lg">arrow_back</span>
                     </button>
                     <div className="space-y-0.5">
-                        <h1 className="text-[1.12rem] font-black uppercase tracking-tighter  leading-none">OE Administração</h1>
-                        <p className="text-[8px] text-primary/60 font-black uppercase tracking-[0.5em] ml-1">Sistema de Controle</p>
+                        <h1 className="text-[1rem] font-black uppercase tracking-tighter leading-none">OE Administração</h1>
+                        <p className="text-[7px] text-primary/40 font-black uppercase tracking-[0.4em]">Painel de Controle</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1825,9 +1830,9 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                 if (onLogout) onLogout();
                             }
                         }}
-                        className="w-12 h-12 aspect-square shrink-0 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-2xl"
+                        className="w-10 h-10 aspect-square shrink-0 rounded-xl bg-rose-500/10 border border-rose-500/10 flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-lg"
                     >
-                        <span className="material-icons-round text-xl">logout</span>
+                        <span className="material-icons-round text-lg">logout</span>
                     </button>
                 </div>
             </header>
@@ -1866,7 +1871,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </div>
                 </header>
 
-                <div className="p-4 md:p-10 pb-24 md:pb-10 flex-1 overflow-y-auto no-scrollbar">
+                <div className="p-6 md:p-10 pb-32 md:pb-10 flex-1 overflow-y-auto no-scrollbar">
                     <div className="max-w-[1600px] mx-auto w-full">
                         {activeTab === 'pdv' && renderPDV()}
                         {activeTab === 'vendas' && renderVendas()}
