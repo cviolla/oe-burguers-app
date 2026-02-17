@@ -1090,7 +1090,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const renderTabs = () => (
         <div className="fixed bottom-0 left-0 right-0 z-50 md:static md:w-64 md:h-screen transition-all duration-500">
-            <nav className="bg-[#1A0F0A] border-r border-white/5 h-full flex flex-col md:w-72 shadow-2xl relative z-50">
+            <nav className="bg-[#1A0F0A] md:border-r border-t md:border-t-0 border-white/5 w-full md:h-full flex flex-row md:flex-col justify-around md:justify-start md:w-72 shadow-2xl relative z-50 pb-2 md:pb-0 h-auto">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] md:hidden"></div>
 
                 {/* Desktop Logo Area */}
@@ -1116,26 +1116,30 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as AdminTab)}
-                        className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative group min-w-[50px] md:flex-row md:w-full md:gap-4 md:px-6 md:py-3 md:rounded-2xl ${activeTab === tab.id
-                            ? 'text-primary scale-110 md:bg-primary/10 md:scale-100 md:shadow-[inset_0_0_20px_rgba(255,183,0,0.05)]'
+                        className={`flex flex-col items-center justify-center py-2 md:py-3 gap-1 md:gap-4 transition-all duration-300 relative group flex-1 md:flex-none md:flex-row md:w-full md:px-6 md:rounded-2xl ${activeTab === tab.id
+                            ? 'text-primary md:bg-primary/10 md:shadow-[inset_0_0_20px_rgba(255,183,0,0.05)]'
                             : 'text-white/20 hover:text-white/50 md:hover:bg-white/5'
                             }`}
                     >
-                        <span className="material-icons-round text-2xl md:text-xl transition-transform duration-300">
+                        <span className={`material-icons-round text-2xl md:text-xl transition-transform duration-300 ${activeTab === tab.id ? 'scale-110 md:scale-100' : ''}`}>
                             {tab.icon}
                         </span>
-                        <span className="text-[7px] font-black uppercase tracking-widest leading-none mb-1 md:text-[10px] md:mb-0">
-                            {tab.id === 'pdv' ? 'Acompanhar' :
+                        <span className="text-[9px] font-black uppercase tracking-widest leading-none md:text-[10px]">
+                            {tab.id === 'pdv' ? 'Início' :
                                 tab.id === 'vendas' ? 'Vendas' :
-                                    tab.id === 'clientes' ? 'Clientes' :
+                                    tab.id === 'clientes' ? 'Clients' :
                                         tab.id === 'cozinha' ? 'Cozinha' :
-                                            tab.id === 'cardapio' ? 'Cardápio' :
-                                                tab.id === 'logistica' ? 'Logística' : tab.label.split(' ')[0]}
+                                            tab.id === 'cardapio' ? 'Menu' :
+                                                tab.id === 'logistica' ? 'Entr.' : tab.label.split(' ')[0]}
                         </span>
 
                         {/* Desktop Active Indicator */}
                         {activeTab === tab.id && (
                             <div className="hidden md:block absolute left-0 w-1 h-6 bg-primary rounded-r-full shadow-[0_0_100px_rgba(255,183,0,0.5)]"></div>
+                        )}
+                        {/* Mobile Active Indicator */}
+                        {activeTab === tab.id && (
+                            <div className="md:hidden absolute top-0 w-8 h-1 bg-primary rounded-b-full shadow-[0_0_20px_rgba(255,183,0,0.6)]"></div>
                         )}
                     </button>
                 ))}
