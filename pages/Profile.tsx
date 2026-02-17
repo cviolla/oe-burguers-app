@@ -33,37 +33,6 @@ const Profile: React.FC<ProfileProps> = ({
   deferredPrompt,
   onPromptUsed
 }) => {
-  const [showAuthModal, setShowAuthModal] = React.useState(false);
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [authError, setAuthError] = React.useState(false);
-  const [isAuthenticating, setIsAuthenticating] = React.useState(false);
-
-  const handleAdminLogin = async () => {
-    setIsAuthenticating(true);
-    setAuthError(false);
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-      if (error) {
-        setAuthError(true);
-      } else if (data.session) {
-        onAdmin();
-        setShowAuthModal(false);
-        setPassword('');
-        setEmail('');
-      }
-    } catch (err) {
-      setAuthError(true);
-    } finally {
-      setIsAuthenticating(false);
-    }
-  };
-
   const lastOrders: any[] = [];
 
   return (
@@ -238,110 +207,7 @@ const Profile: React.FC<ProfileProps> = ({
             </div>
           </section>
         )}
-
-        {/* Modo Editor Section */}
-        <section className="space-y-3">
-          <h3 className="text-sm font-black uppercase tracking-tight text-white/40 px-1 flex items-center gap-2">
-            <span className="material-icons-round text-sm">shield</span>
-            Administração
-          </h3>
-          <div className="space-y-2">
-            <div
-              onClick={() => {
-                if (isAdmin) {
-                  onAdmin();
-                } else {
-                  setShowAuthModal(true);
-                }
-              }}
-              className="bg-primary/5 py-2.5 px-4 rounded-2xl flex items-center justify-between border border-primary/20 active:scale-[0.98] transition-all cursor-pointer group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-lg">admin_panel_settings</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold block text-primary leading-tight">Modo Admin</span>
-                </div>
-              </div>
-              <span className="material-icons-round text-primary/40 group-hover:translate-x-1 transition-transform">chevron_right</span>
-            </div>
-          </div>
-        </section>
       </main>
-
-      {/* Admin Auth Modal */}
-      {showAuthModal && (
-        <div className="fixed inset-0 z-[100] bg-[#130707]/90 backdrop-blur-xl flex items-center justify-center p-6">
-          <div className="w-full max-w-xs bg-[#1C0D0D] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6 relative overflow-hidden">
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-4">
-                <span className="material-icons-round text-3xl">lock</span>
-              </div>
-              <h3 className="text-xl font-black uppercase tracking-tight">Área Restrita</h3>
-              <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest text-center">Digite a senha administrativa</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-dark-text-secondary font-black uppercase tracking-widest ml-1">E-mail</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-dark-bg border border-white/5 rounded-xl py-4 px-6 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-dark-text-secondary/20 font-bold"
-                    placeholder="admin@oeburguers.com.br"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] text-dark-text-secondary font-black uppercase tracking-widest ml-1">Senha</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setAuthError(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAdminLogin();
-                    }}
-                    className={`w-full bg-dark-bg border ${authError ? 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'border-white/5'} rounded-xl py-4 px-6 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-dark-text-secondary/20 font-black tracking-[0.3em]`}
-                    placeholder="••••••••"
-                  />
-                </div>
-
-                {authError && (
-                  <p className="text-rose-500 text-[8px] font-black uppercase tracking-widest text-center mt-2 animate-pulse">Credenciais Inválidas</p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={handleAdminLogin}
-                  disabled={isAuthenticating}
-                  className="w-full bg-primary py-4 rounded-xl text-dark-bg font-black uppercase tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  {isAuthenticating && <span className="material-icons-round animate-spin text-sm">refresh</span>}
-                  {isAuthenticating ? 'Autenticando...' : 'Entrar'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAuthModal(false);
-                    setPassword('');
-                    setEmail('');
-                    setAuthError(false);
-                  }}
-                  className="w-full py-4 text-white/30 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

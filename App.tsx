@@ -742,6 +742,8 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             savedAddress={savedAddress}
             onUpdateName={setUserName}
             onUpdatePhone={setUserPhone}
+            isAdmin={!!session}
+            onAdmin={() => setCurrentView('editor')}
             onViewLegal={(slug) => {
               setLegalDoc(slug);
               setCurrentView('legal');
