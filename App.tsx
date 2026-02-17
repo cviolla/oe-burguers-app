@@ -428,6 +428,8 @@ const App: React.FC = () => {
         break;
       case 'addresses':
       case 'payment_methods':
+        setCurrentView('profile');
+        break;
       case 'legal':
         setCurrentView('settings');
         break;
@@ -968,6 +970,9 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             isAdmin={false}
             deferredPrompt={deferredPrompt}
             onPromptUsed={() => setDeferredPrompt(null)}
+            onUpdateName={setUserName}
+            onUpdatePhone={setUserPhone}
+            showPrompt={showPrompt}
             showAlert={showAlert}
             showConfirm={showConfirm}
           />
@@ -982,21 +987,13 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
           }
         }} />;
       case 'addresses':
-        return <Addresses onBack={() => setCurrentView('settings')} addresses={addresses} setAddresses={setAddresses} deliveryFees={deliveryFees} showAlert={showAlert} showConfirm={showConfirm} />;
+        return <Addresses onBack={() => setCurrentView('profile')} addresses={addresses} setAddresses={setAddresses} deliveryFees={deliveryFees} showAlert={showAlert} showConfirm={showConfirm} />;
 
       case 'settings':
         return (
           <Settings
             onBack={() => setCurrentView('profile')}
             onNavigate={setCurrentView}
-            userName={userName}
-            userPhone={userPhone}
-            preferredPayment={preferredPayment}
-            savedAddress={savedAddress}
-            onUpdateName={setUserName}
-            onUpdatePhone={setUserPhone}
-            isAdmin={false}
-            onAdmin={() => { }}
             onViewLegal={(slug) => {
               setLegalDoc(slug);
               setCurrentView('legal');
@@ -1018,7 +1015,6 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
             }}
             showAlert={showAlert}
             showConfirm={showConfirm}
-            showPrompt={showPrompt}
           />
         );
       case 'notifications':
@@ -1026,7 +1022,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'PIX ' + (totalCents / 100).
       case 'payment_methods':
         return (
           <PaymentMethods
-            onBack={() => setCurrentView('settings')}
+            onBack={() => setCurrentView('profile')}
             preferredPayment={preferredPayment}
             onUpdatePayment={setPreferredPayment}
           />

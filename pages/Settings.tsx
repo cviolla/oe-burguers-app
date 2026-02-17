@@ -5,20 +5,14 @@ import { supabase } from '../supabase';
 interface SettingsProps {
   onBack: () => void;
   onNavigate: (view: any) => void;
-  userName: string;
-  userPhone: string;
-  preferredPayment: string;
-  savedAddress: any;
-  onUpdateName: (name: string) => void;
-  onUpdatePhone: (phone: string) => void;
   onViewLegal: (slug: 'privacy-policy' | 'terms-of-use') => void;
+  onDeleteAccount: () => void;
   showAlert?: (title: string, message: string, icon?: string) => void;
   showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
-  showPrompt?: (title: string, message: string, defaultValue?: string, placeholder?: string, icon?: string) => Promise<string | null>;
 }
 
 
-const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userPhone, preferredPayment, savedAddress, onUpdateName, onUpdatePhone, onViewLegal, onDeleteAccount, showAlert, showConfirm, showPrompt }) => {
+const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, onViewLegal, onDeleteAccount, showAlert, showConfirm }) => {
 
 
   const [notifications, setNotifications] = useState(() => {
@@ -96,50 +90,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onNavigate, userName, userP
       </header>
 
       <main className="px-6 py-4 space-y-6">
-        {/* Account Section */}
-        <section className="space-y-3">
-          <h2 className="text-[10px] font-black text-dark-text-secondary uppercase tracking-[0.2em] ml-1">Minha Conta</h2>
-          <div className="space-y-1.5">
-            <SettingItem
-              icon="person"
-              label="Editar Perfil"
-              sublabel={userName}
-              action={async () => {
-                const newName = await showPrompt?.('Editar Nome', 'Como devemos te chamar?', userName, 'Seu nome');
-                if (newName) onUpdateName(newName);
-              }}
-            />
-            <SettingItem
-              icon="phone"
-              label="Telefone"
-              sublabel={userPhone || 'Cadastrar telefone'}
-              action={async () => {
-                const newPhone = await showPrompt?.('Editar WhatsApp', 'Digite seu novo número de telefone:', userPhone, '(00) 00000-0000');
-                if (newPhone) onUpdatePhone(newPhone);
-              }}
-            />
-            <SettingItem
-              icon="place"
-              label="Endereços de Entrega"
-              sublabel={savedAddress ? `${savedAddress.street}, ${savedAddress.number}` : "Gerenciar locais salvos"}
-              action={() => onNavigate('addresses')}
-            />
-            <SettingItem
-              icon="credit_card"
-              label="Métodos de Pagamento"
-              sublabel={
-                preferredPayment === 'pix' ? 'PIX' :
-                  preferredPayment === 'dinheiro' ? 'Dinheiro' :
-                    preferredPayment === 'credito' ? 'Cartão de Crédito' :
-                      preferredPayment === 'debito' ? 'Cartão de Débito' :
-                        preferredPayment === 'mumbuca' ? 'Mumbuca' :
-                          preferredPayment === 'ppt' ? 'PPT' :
-                            'Selecione um método'
-              }
-              action={() => onNavigate('payment_methods')}
-            />
-          </div>
-        </section>
+
 
         {/* Notifications Section */}
         <section className="space-y-3">

@@ -14,6 +14,9 @@ interface ProfileProps {
   savedAddress?: any;
   deferredPrompt?: any;
   onPromptUsed?: () => void;
+  onUpdateName: (name: string) => void;
+  onUpdatePhone: (phone: string) => void;
+  showPrompt?: (title: string, message: string, defaultValue?: string, placeholder?: string, icon?: string) => Promise<string | null>;
   userOrders?: any[];
   showAlert?: (title: string, message: string, icon?: string) => void;
   showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
@@ -31,9 +34,30 @@ const Profile: React.FC<ProfileProps> = ({
   savedAddress,
   deferredPrompt,
   onPromptUsed,
+  onUpdateName,
+  onUpdatePhone,
+  showPrompt,
   userOrders = []
 }) => {
   const lastOrders = userOrders.slice(0, 3); // Pegar os 3 mais recentes
+
+  const SettingItem = ({ icon, label, sublabel, action }: any) => (
+    <div
+      onClick={action}
+      className="bg-dark-card py-2.5 px-4 rounded-xl border border-white/5 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-dark-bg border border-white/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+          <span className="material-icons-round text-lg">{icon}</span>
+        </div>
+        <div>
+          <p className="text-[13px] font-bold text-white leading-none mb-0.5">{label}</p>
+          {sublabel && <p className="text-[9px] text-dark-text-secondary uppercase tracking-widest">{sublabel}</p>}
+        </div>
+      </div>
+      <span className="material-icons-round text-dark-text-secondary group-hover:text-primary transition-colors text-lg">chevron_right</span>
+    </div>
+  );
 
   return (
     <div className="pb-32">
@@ -56,6 +80,51 @@ const Profile: React.FC<ProfileProps> = ({
       </header>
 
       <main className="px-6 space-y-5">
+        {/* Account Section - MOVED FROM SETTINGS */}
+        <section className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <h3 className="text-[10px] font-black text-dark-text-secondary uppercase tracking-[0.2em] ml-1 mb-1">Minha Conta</h3>
+          <div className="space-y-1.5 text-left">
+            <SettingItem
+              icon="person"
+              label="Editar Perfil"
+              sublabel={userName}
+              action={async () => {
+                const newName = await showPrompt?.('Editar Nome', 'Como devemos te chamar?', userName, 'Seu nome');
+                if (newName) onUpdateName(newName);
+              }}
+            />
+            <SettingItem
+              icon="phone"
+              label="Telefone"
+              sublabel={userPhone || 'Cadastrar telefone'}
+              action={async () => {
+                const newPhone = await showPrompt?.('Editar WhatsApp', 'Digite seu novo número de telefone:', userPhone, '(00) 00000-0000');
+                if (newPhone) onUpdatePhone(newPhone);
+              }}
+            />
+            <SettingItem
+              icon="place"
+              label="Endereços de Entrega"
+              sublabel={savedAddress ? `${savedAddress.street}, ${savedAddress.number}` : "Gerenciar locais salvos"}
+              action={() => onNavigate('addresses')}
+            />
+            <SettingItem
+              icon="credit_card"
+              label="Métodos de Pagamento"
+              sublabel={
+                preferredPayment === 'pix' ? 'PIX' :
+                  preferredPayment === 'dinheiro' ? 'Dinheiro' :
+                    preferredPayment === 'credito' ? 'Cartão de Crédito' :
+                      preferredPayment === 'debito' ? 'Cartão de Débito' :
+                        preferredPayment === 'mumbuca' ? 'Mumbuca' :
+                          preferredPayment === 'ppt' ? 'PPT' :
+                            'Selecione um método'
+              }
+              action={() => onNavigate('payment_methods')}
+            />
+          </div>
+        </section>
+
         {/* Stats */}
         <div className="grid grid-cols-1 gap-3">
           <div className="bg-dark-card py-3 px-6 rounded-[1.5rem] border border-white/5 shadow-lg flex items-center justify-between">
