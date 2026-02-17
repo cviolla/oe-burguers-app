@@ -531,10 +531,12 @@ const App: React.FC = () => {
         return newCart;
       }
 
-      // Calculate total price with add-ons
+      // Calculate total price with add-ons using DB data primarily
       const addonsTotal = options.reduce((acc, opt) => {
-        const addon = PRODUCT_ADDONS.find(a => a.label === opt);
-        return acc + (addon ? addon.price : 0);
+        // Try to find in DB addons first, then fallback to constants
+        const addon = productAddons.find(a => a.name === opt) || PRODUCT_ADDONS.find(a => a.label === opt);
+        const price = addon ? (addon.price !== undefined ? addon.price : (addon.price_delta_cents ? addon.price_delta_cents / 100 : 0)) : 0;
+        return acc + price;
       }, 0);
 
       const cartId = `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
