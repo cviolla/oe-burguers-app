@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Product } from '../types';
+import { Product, AdminSession } from '../types';
 import { supabase } from '../supabase';
 import { searchMatch } from '../utils';
 
@@ -12,6 +12,7 @@ interface EditorProps {
     addons?: any[];
     storeStatus?: 'auto' | 'open' | 'closed';
     onLogout?: () => void;
+    activeSession?: AdminSession | null;
     showAlert?: (title: string, message: string, icon?: string) => void;
     showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
     showPrompt?: (title: string, message: string, defaultValue?: string, placeholder?: string, icon?: string) => Promise<string | null>;
@@ -50,7 +51,7 @@ interface CustomerProfile {
 
 type AdminTab = 'pdv' | 'vendas' | 'cardapio' | 'cozinha' | 'logistica' | 'clientes';
 
-const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFees, addons, storeStatus = 'auto', onLogout, showAlert, showConfirm, showPrompt }) => {
+const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFees, addons, storeStatus = 'auto', onLogout, activeSession, showAlert, showConfirm, showPrompt }) => {
     const [activeTab, setActiveTab] = useState<AdminTab>('pdv');
     const [orders, setOrders] = useState<Order[]>([]);
     const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -340,6 +341,26 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         };
     }, []);
 
+    const [onlineTime, setOnlineTime] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setOnlineTime(prev => prev + 1);
+        }, 30000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const getFormattedOnlineTime = () => {
+        if (!activeSession) return '';
+        const start = new Date(activeSession.loggedInAt);
+        const now = new Date();
+        const diffMs = now.getTime() - start.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const h = Math.floor(diffMins / 60);
+        const m = diffMins % 60;
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    };
+
     const fetchCustomers = async () => {
         const { data } = await supabase.from('customers').select('*');
         if (data) setCustomerProfiles(data);
@@ -361,6 +382,28 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
 
+
+    const updatePaymentStatus = async (orderId: string, paymentStatus: Order['payment_status']) => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('orders')
+                .update({ payment_status: paymentStatus })
+                .eq('id', orderId);
+
+            if (error) throw error;
+            fetchOrders();
+            if (selectedOrder && selectedOrder.id === orderId) {
+                setSelectedOrder({ ...selectedOrder, payment_status: paymentStatus });
+            }
+        } catch (error: any) {
+            console.error('Erro ao atualizar status de pagamento:', error);
+            showAlert?.('Erro', 'Não foi possível atualizar o pagamento: ' + (error.message || 'Erro desconhecido'), 'error_outline');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const updateOrderStatus = async (orderId: string, status: Order['status'], paymentStatus?: Order['payment_status']) => {
         if (loading) return;
@@ -991,21 +1034,30 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     </div>
                                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{client.phone}</p>
                                 </div>
-                                <div className="flex gap-1.5">
+                                <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                                     <button
-                                        onClick={() => setEditingClient(client)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingClient(client);
+                                        }}
                                         className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:bg-primary hover:text-dark-bg transition-all"
                                     >
                                         <span className="material-icons-round text-base">edit</span>
                                     </button>
                                     <button
-                                        onClick={() => handleArchiveClient(client.phone, !client.is_archived)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleArchiveClient(client.phone, !client.is_archived);
+                                        }}
                                         className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${client.is_archived ? 'bg-emerald-500/10 text-emerald-500' : 'bg-white/5 text-white/40 hover:bg-amber-500/20 hover:text-amber-500'}`}
                                     >
                                         <span className="material-icons-round text-base">{client.is_archived ? 'unarchive' : 'archive'}</span>
                                     </button>
                                     <button
-                                        onClick={() => handleDeleteClient(client.phone)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteClient(client.phone);
+                                        }}
                                         className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:bg-rose-500 hover:text-white transition-all"
                                     >
                                         <span className="material-icons-round text-base">delete_outline</span>
@@ -1104,6 +1156,57 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                 >
                                     {loading ? <span className="material-icons-round animate-spin text-sm">refresh</span> : <span className="material-icons-round text-sm">check_circle</span>}
                                     Criar Cliente
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Client Modal */}
+                {editingClient && (
+                    <div className="fixed inset-0 z-[100] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+                        <div className="w-full max-w-sm bg-dark-card border border-white/10 rounded-3xl shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-500">
+                            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <h3 className="text-sm font-black uppercase tracking-widest ">Editar Cliente</h3>
+                                    <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">Atualizar informações</p>
+                                </div>
+                                <button onClick={() => setEditingClient(null)} className="text-white/20 hover:text-white transition-colors">
+                                    <span className="material-icons-round text-lg">close</span>
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleUpdateClient} className="p-8 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black uppercase text-white/20 ml-2 tracking-[0.3em]">Nome</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editingClient.name}
+                                        onChange={(e) => setEditingClient({ ...editingClient, name: e.target.value })}
+                                        className="w-full bg-dark-bg border border-white/5 h-14 rounded-xl px-6 text-sm font-black focus:ring-2 focus:ring-primary focus:border-transparent outline-none shadow-inner"
+                                        placeholder="Nome completo"
+                                    />
+                                </div>
+
+                                <div className="space-y-2 opacity-60">
+                                    <label className="text-[9px] font-black uppercase text-white/20 ml-2 tracking-[0.3em]">Telefone (WhatsApp)</label>
+                                    <input
+                                        type="tel"
+                                        readOnly
+                                        value={editingClient.phone}
+                                        className="w-full bg-dark-bg/40 border border-white/5 h-14 rounded-xl px-6 text-sm font-black outline-none cursor-not-allowed"
+                                    />
+                                    <p className="text-[8px] text-white/10 ml-2 uppercase font-black tracking-widest">Telefone não pode ser alterado</p>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-primary py-4 rounded-xl text-dark-bg font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {loading ? <span className="material-icons-round animate-spin text-sm">refresh</span> : <span className="material-icons-round text-sm">save</span>}
+                                    Salvar Alterações
                                 </button>
                             </form>
                         </div>
@@ -1309,10 +1412,15 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     #{order.short_id}
                                 </span>
                             </div>
-                            <span className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest ${order.payment_status === 'pago' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-                                }`}>
-                                {order.payment_status === 'pago' ? 'Pago' : 'Pendente'}
-                            </span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updatePaymentStatus(order.id, order.payment_status === 'pago' ? 'pendente' : 'pago');
+                                }}
+                                className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all active:scale-95 border ${order.payment_status === 'pago' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/20 text-rose-500 border-rose-500/40 animate-pulse'
+                                    }`}>
+                                {order.payment_status === 'pago' ? 'Pago' : 'Confirmar Pagamento'}
+                            </button>
                         </div>
 
                         <div className="space-y-0.5">
@@ -1563,7 +1671,18 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     className="bg-dark-card border border-white/10 rounded-lg p-2 space-y-2 hover:border-primary/30 transition-all group animate-in zoom-in-95 premium-shadow cursor-pointer active:scale-[0.98]"
                                 >
                                     <div className="flex justify-between items-start">
-                                        <div className="bg-primary/10 text-primary px-2 py-0.5 rounded-lg text-[8px] font-black  border border-primary/20">#{order.short_id}</div>
+                                        <div className="flex gap-1.5">
+                                            <div className="bg-primary/10 text-primary px-2 py-0.5 rounded-lg text-[8px] font-black  border border-primary/20">#{order.short_id}</div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    updatePaymentStatus(order.id, order.payment_status === 'pago' ? 'pendente' : 'pago');
+                                                }}
+                                                className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest transition-all active:scale-95 border ${order.payment_status === 'pago' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/20 text-rose-500 border-rose-500/40 animate-pulse'}`}
+                                            >
+                                                {order.payment_status === 'pago' ? 'PAGO' : 'PAGAR'}
+                                            </button>
+                                        </div>
                                         <span className="text-[8px] text-white/20 font-black uppercase tracking-wider">{new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                     <div className="space-y-1">
@@ -1960,6 +2079,17 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     >
                         <span className="material-icons-round text-lg">logout</span>
                     </button>
+                    {activeSession && (
+                        <div className="flex flex-col items-end">
+                            <div className="flex items-center gap-1 text-[8px] font-black text-primary uppercase tracking-tighter">
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                {activeSession.deviceName}
+                            </div>
+                            <span className="text-[7px] text-white/30 font-bold uppercase tracking-widest leading-none">
+                                {getFormattedOnlineTime()} online
+                            </span>
+                        </div>
+                    )}
                 </div>
             </header>
 
@@ -1984,6 +2114,27 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             </h2>
                             <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em]">Painel de Controle de {activeTab === 'pdv' ? 'Vendas' : activeTab}</p>
                         </div>
+
+                        {activeSession && (
+                            <div className="flex items-center gap-4 bg-dark-card/40 border border-white/5 px-6 py-3 rounded-2xl premium-shadow backdrop-blur-3xl group transition-all hover:border-primary/20">
+                                <div className="flex flex-col items-end text-right">
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-primary transition-colors">Dispositivo Online</h4>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-[9px] text-white/40 font-bold uppercase group-hover:text-white/60 transition-colors">
+                                            {activeSession.deviceName}
+                                        </p>
+                                        <div className="w-px h-2 bg-white/10 shrink-0"></div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+                                            <span className="text-[9px] text-emerald-500 font-black uppercase tracking-widest">{getFormattedOnlineTime()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/20 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                                    <span className="material-icons-round text-xl">devices</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
 
@@ -2057,9 +2208,11 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[9px] font-black uppercase text-white/20 tracking-widest mb-1">Pagamento</p>
-                                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${selectedOrder.payment_status === 'pago' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
-                                            {selectedOrder.payment_status === 'pago' ? 'Pago' : 'Pendente'}
-                                        </span>
+                                        <button
+                                            onClick={() => updatePaymentStatus(selectedOrder.id, selectedOrder.payment_status === 'pago' ? 'pendente' : 'pago')}
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all active:scale-95 ${selectedOrder.payment_status === 'pago' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/20 text-rose-500 border-rose-500/40 animate-pulse'}`}>
+                                            {selectedOrder.payment_status === 'pago' ? 'Pago' : 'Confirmar Pagamento'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>

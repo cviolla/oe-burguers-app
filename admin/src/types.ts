@@ -51,3 +51,10 @@ export interface DeliveryFee {
 }
 
 export type AppView = 'home' | 'coupons' | 'cart' | 'checkout' | 'profile' | 'notifications' | 'payment_methods' | 'product_detail' | 'settings' | 'order_history' | 'addresses' | 'scheduling' | 'onboarding' | 'login' | 'legal' | 'editor' | 'store_info';
+
+export interface AdminSession {
+  deviceId: string;
+  deviceName: string;
+  loggedInAt: string;
+}
+

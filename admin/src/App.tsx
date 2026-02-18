@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Product } from './types';
+import { Product, AdminSession } from './types';
 import Editor from './pages/Editor';
 import Login from './pages/Login';
 import { INITIAL_PRODUCTS, PRODUCT_ADDONS } from './constants';
@@ -26,6 +26,7 @@ function App() {
   const [deliveryFees, setDeliveryFees] = useState<any[]>([]);
   const [productAddons, setProductAddons] = useState<any[]>([]);
   const [storeStatus, setStoreStatus] = useState<'auto' | 'open' | 'closed'>('auto');
+  const [activeSession, setActiveSession] = useState<AdminSession | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Dialog State
@@ -156,6 +157,73 @@ function App() {
     }
   }, [session]);
 
+  // Session enforcement effect
+  useEffect(() => {
+    if (!session) {
+      setActiveSession(null);
+      return;
+    }
+
+    const userId = session.user.id;
+    let localDeviceId = localStorage.getItem('admin_device_id');
+    if (!localDeviceId) {
+      localDeviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('admin_device_id', localDeviceId);
+    }
+
+    const getDeviceName = () => {
+      const ua = navigator.userAgent;
+      if (ua.includes('iPhone')) return 'iPhone';
+      if (ua.includes('Android')) return 'Android';
+      if (ua.includes('Windows')) return 'Windows PC';
+      if (ua.includes('Macintosh')) return 'Mac';
+      return 'Navegador';
+    };
+
+    const deviceName = getDeviceName();
+    const configKey = `admin_session_${userId}`;
+
+    const updateDB = async () => {
+      const sessionData: AdminSession = {
+        deviceId: localDeviceId!,
+        deviceName: deviceName,
+        loggedInAt: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('store_config')
+        .upsert({
+          key: configKey,
+          value: sessionData
+        }, { onConflict: 'key' });
+
+      if (!error) {
+        setActiveSession(sessionData);
+      }
+    };
+
+    updateDB();
+
+    const channel = supabase
+      .channel(`session-guard-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'store_config', filter: `key=eq.${configKey}` },
+        (payload) => {
+          const newData = payload.new as any;
+          if (newData && newData.value && newData.value.deviceId !== localDeviceId) {
+            showAlert('Dispositivo Duplicado', 'Sua conta foi acessada em outro dispositivo. Este acesso será encerrado.', 'devices')
+              .then(() => supabase.auth.signOut());
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session]);
+
 
   // Dialog Functions
   const showAlert = (title: string, message: string, icon = 'info') => {
@@ -230,6 +298,7 @@ function App() {
         addons={productAddons}
         storeStatus={storeStatus}
         onLogout={() => supabase.auth.signOut()}
+        activeSession={activeSession}
         showAlert={showAlert}
         showConfirm={showConfirm}
         showPrompt={showPrompt}
