@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:admin": "cd admin && npm run dev",
-    "build": "vite build && cd admin && npm install && npm run build",
+    "build": "vite build && cd admin && npm install && npm run build && cd .. && node scripts/copy-admin.js",
     "preview": "vite preview"
   },
   "dependencies": {
