@@ -117,8 +117,7 @@ const Profile: React.FC<ProfileProps> = ({
                     preferredPayment === 'credito' ? 'Cartão de Crédito' :
                       preferredPayment === 'debito' ? 'Cartão de Débito' :
                         preferredPayment === 'mumbuca' ? 'Mumbuca' :
-                          preferredPayment === 'ppt' ? 'PPT' :
-                            'Selecione um método'
+                          'Selecione um método'
               }
               action={() => onNavigate('payment_methods')}
             />

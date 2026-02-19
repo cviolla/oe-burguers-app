@@ -2468,7 +2468,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-[9px] font-black uppercase text-white/20 ml-2 tracking-[0.3em]">Status e Destaques</label>
+                                    <label className="text-[9px] font-black uppercase text-white/20 ml-2 tracking-[0.3em]">Status e Selos</label>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
                                             type="button"
@@ -2479,7 +2479,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                                 }`}
                                         >
                                             <span className="material-icons-round text-lg">{editingItem.isBestSeller ? 'star' : 'star_outline'}</span>
-                                            <span className="text-[10px] uppercase font-black tracking-widest">Destaque</span>
+                                            <span className="text-[10px] uppercase font-black tracking-widest">Mais Vendido</span>
                                         </button>
                                         <button
                                             type="button"

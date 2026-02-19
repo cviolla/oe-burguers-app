@@ -62,7 +62,7 @@ const App: React.FC = () => {
   const [productAddons, setProductAddons] = useState<any[]>([]);
   const [isAddonsVisible, setIsAddonsVisible] = useState(true);
   const [storeStatus, setStoreStatus] = useState<'auto' | 'open' | 'closed'>('auto');
-  const [categories, setCategories] = useState<string[]>(['Destaques', 'Burgers', 'Combos', 'Batata-frita', 'Promoções', 'Sobremesas', 'Bebidas', 'Porções', 'Combo na Caixa']);
+  const [categories, setCategories] = useState<string[]>(['Burgers', 'Combos', 'Batata-frita', 'Promoções', 'Sobremesas', 'Bebidas', 'Porções', 'Combo na Caixa']);
   const [userOrders, setUserOrders] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -499,8 +499,11 @@ const App: React.FC = () => {
 
         // Recover payment method
         if (lastOrder.payment_method) {
-          setPreferredPayment(lastOrder.payment_method);
-          localStorage.setItem('oe_preferred_payment', lastOrder.payment_method);
+          const method = lastOrder.payment_method.toLowerCase();
+          if (method !== 'ppt') { // Prevenir recuperação de método obsoleto
+            setPreferredPayment(method);
+            localStorage.setItem('oe_preferred_payment', method);
+          }
         }
 
         // Recover address
@@ -567,7 +570,7 @@ const App: React.FC = () => {
 
       if (error) throw error;
       if (data && data.length > 0) {
-        const catNames = ['Destaques', ...data.map(c => c.name)];
+        const catNames = data.map(c => c.name);
         setCategories(catNames);
       }
     } catch (err) {

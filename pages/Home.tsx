@@ -24,15 +24,21 @@ const Home: React.FC<HomeProps> = ({ userName, products, categoriesFromDB, onPro
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('Destaques');
+  const [activeCategory, setActiveCategory] = useState('');
 
-  const categories = categoriesFromDB || ['Destaques', 'Burgers', 'Combos', 'Batata-frita', 'Promoções', 'Sobremesas', 'Bebidas', 'Porções', 'Combo na Caixa'];
+  const categories = categoriesFromDB || ['Burgers', 'Combos', 'Batata-frita', 'Promoções', 'Sobremesas', 'Bebidas', 'Porções', 'Combo na Caixa'];
+
+  useEffect(() => {
+    if (activeCategory === '' && categories.length > 0) {
+      setActiveCategory(categories[0]);
+    }
+  }, [categories, activeCategory]);
 
   useEffect(() => {
     const observerOptions = {
       root: null,
-      rootMargin: '-15% 0px -15% 0px',
-      threshold: [0, 0.1, 0.5]
+      rootMargin: '-100px 0px -80% 0px',
+      threshold: 0
     };
 
     const handleIntersect = (entries: IntersectionObserverEntry[]) => {
@@ -83,7 +89,7 @@ const Home: React.FC<HomeProps> = ({ userName, products, categoriesFromDB, onPro
   const scrollToCategory = (cat: string) => {
     const element = document.getElementById(`cat-${cat}`);
     if (element) {
-      const offset = 160; // Approximate height of sticky headers
+      const offset = 120; // Ajustado para o novo header fixo
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
 
@@ -114,8 +120,6 @@ const Home: React.FC<HomeProps> = ({ userName, products, categoriesFromDB, onPro
       searchMatch(product.description, query)
     );
   });
-
-  const featuredProducts = products.filter(p => (p.isBestSeller || p.isPopular) && p.isActive !== false);
 
   const isSearching = searchQuery.length > 0;
 
@@ -229,39 +233,8 @@ const Home: React.FC<HomeProps> = ({ userName, products, categoriesFromDB, onPro
           </section>
         ) : (
           <div className="space-y-6">
-            {/* Destaques Section */}
-            <section id="cat-Destaques" className="cat-section px-6">
-              <h3 className="text-[13px] font-black uppercase tracking-[0.2em] text-white/40 mb-2.5 ml-1 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                Destaques
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {featuredProducts.map((product) => {
-                  const quantity = cart.filter(item => item.id === product.id).reduce((acc, item) => acc + item.quantity, 0);
-
-                  return (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      quantity={quantity}
-                      onClick={() => onProductClick(product)}
-                      onAdd={(e) => {
-                        e.stopPropagation();
-                        onAddToCart(product, 1);
-                      }}
-                      onUpdate={(e, delta) => {
-                        e.stopPropagation();
-                        onUpdateQty(product.id, delta);
-                      }}
-                      isOpen={isOpen}
-                    />
-                  );
-                })}
-              </div>
-            </section>
-
             {/* Other Categories Sections */}
-            {categories.filter(c => c !== 'Destaques').map(cat => {
+            {categories.map(cat => {
               const catProducts = products.filter(p => p.category === cat && p.isActive !== false);
               if (catProducts.length === 0) return null;
 

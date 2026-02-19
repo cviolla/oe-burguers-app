@@ -16,7 +16,6 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ onBack, preferredPaymen
         { id: 'credito', label: 'CARTÃO DE CRÉDITO', icon: 'credit_card', color: 'text-blue-500' },
         { id: 'debito', label: 'CARTÃO DE DÉBITO', icon: 'credit_card', color: 'text-purple-500' },
         { id: 'mumbuca', label: 'MUMBUCA', icon: 'account_balance_wallet', color: 'text-orange-500' },
-        { id: 'ppt', label: 'PPT', icon: 'stars', color: 'text-amber-500' },
     ];
 
     return (
