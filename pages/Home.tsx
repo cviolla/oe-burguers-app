@@ -129,7 +129,7 @@ const Home: React.FC<HomeProps> = ({ userName, products, categoriesFromDB, onPro
             <div className="flex items-center gap-1.5">
               <span className="text-[9px] text-primary font-black uppercase tracking-[0.1em] whitespace-nowrap">OE BURGUERS</span>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Praça+Nossa+Sra.+das+Gracas+-+Ponta+Negra,+Maricá+-+RJ,+Brasil"
+                href="https://www.google.com/maps/search/?api=1&query=Praça+Nossa+Sra.+das+Graças+-+Ponta+Negra,+Maricá+-+RJ,+Brasil"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-[9px] text-primary hover:opacity-80 transition-all font-black uppercase tracking-wider group whitespace-nowrap"

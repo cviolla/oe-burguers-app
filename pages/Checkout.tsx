@@ -78,7 +78,7 @@ const Checkout: React.FC<CheckoutProps> = ({
 
   const isFormValid = !!(
     formData.name.trim() &&
-    formData.phone.trim().length >= 14 && // (00) 00000-0000
+    formData.phone.trim().length === 14 && // (00)00000-0000
     (scheduledTime ? true : (formData.street.trim() && formData.number.trim() && neighborhoodFee)) &&
     formData.paymentMethod !== ''
   );
@@ -95,9 +95,9 @@ const Checkout: React.FC<CheckoutProps> = ({
     if (name === 'phone') {
       newValue = value
         .replace(/\D/g, '')
-        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{2})(\d)/, '($1)$2')
         .replace(/(\d{5})(\d)/, '$1-$2')
-        .substring(0, 15);
+        .substring(0, 14);
 
       setFormData(prev => ({ ...prev, [name]: newValue }));
       onUpdatePhone?.(newValue);
@@ -189,7 +189,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                   onChange={handleInputChange}
                   className="w-full bg-dark-card border border-white/5 rounded-2xl py-4 px-5 text-sm focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all placeholder:text-dark-text-secondary/20"
                 />
-                {formData.phone.trim().length >= 14 && (
+                {formData.phone.trim().length === 14 && (
                   <span className="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-sm">check_circle</span>
                 )}
               </div>

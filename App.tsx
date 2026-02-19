@@ -222,7 +222,14 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (userName && userPhone.length >= 14) {
+    if (userPhone.length === 14) {
+      recoverUserData(userPhone);
+      fetchUserOrders(userPhone);
+    }
+  }, [userPhone]);
+
+  useEffect(() => {
+    if (userName && userPhone.length === 14) {
       const timer = setTimeout(async () => {
         try {
           await supabase.from('customers').upsert({
@@ -459,6 +466,21 @@ const App: React.FC = () => {
 
   const recoverUserData = async (phone: string) => {
     try {
+      // 1. Try to recover from customers table first (Profile)
+      const { data: customerData } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('phone', phone)
+        .single();
+
+      if (customerData) {
+        if (customerData.name && !userName) {
+          setUserName(customerData.name);
+          localStorage.setItem('oe_user_name', customerData.name);
+        }
+      }
+
+      // 2. Recover last order details (Address and Payment)
       const { data, error } = await supabase
         .from('orders')
         .select('*')
@@ -469,16 +491,20 @@ const App: React.FC = () => {
       if (data && data.length > 0) {
         const lastOrder = data[0];
 
+        // Recover name if still missing
+        if (lastOrder.client_name && !userName) {
+          setUserName(lastOrder.client_name);
+          localStorage.setItem('oe_user_name', lastOrder.client_name);
+        }
+
         // Recover payment method
         if (lastOrder.payment_method) {
           setPreferredPayment(lastOrder.payment_method);
           localStorage.setItem('oe_preferred_payment', lastOrder.payment_method);
         }
 
-        // Recover address - try to parse from concatenated delivery_address if needed
+        // Recover address
         if (lastOrder.neighborhood) {
-
-          // Extract street and number from delivery_address (Format: "Street, Number - Complement")
           const addrParts = (lastOrder.delivery_address || '').split(',');
           const street = addrParts[0]?.trim() || '';
           const numComp = addrParts[1]?.split('-') || [];
@@ -493,7 +519,6 @@ const App: React.FC = () => {
           };
 
           setSavedAddress(recoveredAddr);
-
           localStorage.setItem('oe_saved_address', JSON.stringify(recoveredAddr));
         }
       }
@@ -562,6 +587,31 @@ const App: React.FC = () => {
       if (data) setUserOrders(data);
     } catch (err) {
       console.error("Erro ao buscar pedidos do usuário:", err);
+    }
+  };
+
+  const handleRepeatOrder = async (order: any) => {
+    if (!order.order_items || order.order_items.length === 0) {
+      showAlert("Erro", "Este pedido não contém itens para repetir.", "error_outline");
+      return;
+    }
+
+    let addedAny = false;
+    for (const item of order.order_items) {
+      const product = products.find(p => p.name === item.product_name);
+      if (product) {
+        // Here we add with quantity 1 by default or the original quantity?
+        // Let's use the original quantity to be helpful
+        addToCart(product, item.quantity, []);
+        addedAny = true;
+      }
+    }
+
+    if (addedAny) {
+      setCurrentView('cart');
+      showAlert("Carrinho Atualizado", "Os itens do pedido anterior foram adicionados ao seu carrinho.", "shopping_cart");
+    } else {
+      showAlert("Produto Indisponível", "Os produtos deste pedido não estão mais disponíveis no cardápio.", "info");
     }
   };
 
@@ -719,7 +769,7 @@ const App: React.FC = () => {
       const { data: dbOrder, error: orderError } = await supabase
         .from('orders')
         .insert({
-          client_name: orderData.name || userName || 'Cliente OE Burguer',
+          client_name: orderData.name || userName || 'Cliente OE BURGUERS',
           client_phone: orderData.phone,
           total_cents: totalCents,
           status: 'pendente',
@@ -786,7 +836,7 @@ const App: React.FC = () => {
       // WhatsApp Message Generation
       const storeWhatsApp = "5521972724360";
       const now = new Date();
-      const dateStr = now.toLocaleDateString('pt-BR');
+      const dateStr = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
       const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
       const itemsList = cart.map(item => {
@@ -796,36 +846,43 @@ const App: React.FC = () => {
       }).join('\n\n');
       const orderId = orderDataTyped.short_id || orderDataTyped.id.slice(0, 5).toUpperCase();
 
-      const message = `👋 Venho do app OE BURGUERS
-#${orderId}
-🗓️ ${dateStr} ⏰ ${timeStr}
+      const message = `*NOVO PEDIDO: OE BURGUERS*
+*#${orderId}*
+------------------------------
+*Data:* ${dateStr}
+*Hora:* ${timeStr}
 
-Tipo de serviço: ${scheduledTime ? 'Retirada' : 'Delivery'}
+*Tipo:* ${scheduledTime ? 'Retirada' : 'Delivery'}
 
-Nome: ${orderData.name || userName}
-Telefone: ${orderData.phone}
-Endereço: ${orderData.street} nº${orderData.number}${orderData.complement ? ' - ' + orderData.complement : ''}
-Bairro: ${orderData.neighborhood}
+*Cliente:* ${orderData.name || userName}
+*Tel:* ${orderData.phone}
+*Endereço:* ${orderData.street} nº${orderData.number}${orderData.complement ? ' - ' + orderData.complement : ''}
+*Bairro:* ${orderData.neighborhood}
 
-📝 Produtos
+------------------------------
+*PRODUTOS*
 ${itemsList}
 
+------------------------------
+*RESUMO*
 Subtotal: R$ ${(subtotalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 Delivery: ${deliveryFeeCents === 0 ? 'Grátis' : `R$ ${(deliveryFeeCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-Total: R$ ${(totalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+*Total: R$ ${(totalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*
 
-💲 Pagamento
-Estado do pagamento: Não pago
-Total a pagar: R$ ${(totalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'Pagamento via: PIX\n21972724360 Natany (itau) | Envie o comprovante para 21 97272-4360' : 'Pagamento via: ' + orderData.paymentMethod.toUpperCase()}
+------------------------------
+*PAGAMENTO*
+Forma: ${orderData.paymentMethod.toUpperCase()}
+Status: Não pago
+${orderData.paymentMethod.toUpperCase() === 'PIX' ? '\n*Chave PIX (Telefone):*\n21972724360\nNatany (Itau)\n\n*Por favor, envie o comprovante!*' : ''}
 
-*Por favor, envie-nos o comprovante do PIX. Assim que recebermos estaremos atendendo você.*`;
+------------------------------
+*OE BURGUERS agradece a preferência!*`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${storeWhatsApp}?text=${encodedMessage}`;
 
-      // Redirecionar para o WhatsApp - Usando location.assign para evitar bloqueio de popup no Safari iOS após await
-      window.location.assign(whatsappUrl);
+      // Redirecionar para o WhatsApp
+      window.location.href = whatsappUrl;
 
       setLastCompletedCart([...cart]);
       setCart([]);
@@ -991,17 +1048,11 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? 'Pagamento via: PIX\n2197272
             showPrompt={showPrompt}
             showAlert={showAlert}
             showConfirm={showConfirm}
+            onRepeatOrder={handleRepeatOrder}
           />
         );
       case 'order_history':
-        return <OrderHistory onBack={() => setCurrentView('profile')} userOrders={userOrders} onRepeatOrder={(order) => {
-          // Simplificando o repetir pedido para pegar o primeiro item encontrado no catálogo
-          const firstItem = order.order_items?.[0];
-          if (firstItem) {
-            const product = products.find(p => p.name === firstItem.product_name);
-            if (product) addToCart(product, 1);
-          }
-        }} />;
+        return <OrderHistory onBack={() => setCurrentView('profile')} userOrders={userOrders} onRepeatOrder={handleRepeatOrder} />;
       case 'addresses':
         return <Addresses onBack={() => setCurrentView('profile')} addresses={addresses} setAddresses={setAddresses} deliveryFees={deliveryFees} showAlert={showAlert} showConfirm={showConfirm} />;
 
@@ -1134,11 +1185,24 @@ const CustomDialog: React.FC<{ config: DialogConfig }> = ({ config }) => {
                 autoFocus
                 type="text"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  const isPhoneInput = config.placeholder === '(00)00000-0000' || config.title?.toLowerCase().includes('whatsapp');
+                  if (isPhoneInput) {
+                    val = val
+                      .replace(/\D/g, '')
+                      .replace(/(\d{2})(\d)/, '($1)$2')
+                      .replace(/(\d{5})(\d)/, '$1-$2')
+                      .substring(0, 14);
+                  }
+                  setInputValue(val);
+                }}
                 placeholder={config.placeholder}
                 className="w-full bg-dark-bg border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') config.onConfirm(inputValue);
+                  const isPhoneInput = config.placeholder === '(00)00000-0000' || config.title?.toLowerCase().includes('whatsapp');
+                  const isInvalid = isPhoneInput && inputValue.length > 0 && inputValue.length !== 14;
+                  if (e.key === 'Enter' && !isInvalid) config.onConfirm(inputValue);
                   if (e.key === 'Escape') config.onCancel();
                 }}
               />
@@ -1156,8 +1220,17 @@ const CustomDialog: React.FC<{ config: DialogConfig }> = ({ config }) => {
             </button>
           )}
           <button
-            onClick={() => config.onConfirm(inputValue)}
-            className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-colors active:bg-primary/20 text-primary hover:bg-white/5`}
+            onClick={() => {
+              const isPhoneInput = config.placeholder === '(00)00000-0000' || config.title?.toLowerCase().includes('whatsapp');
+              const isInvalid = isPhoneInput && inputValue.length > 0 && inputValue.length !== 14;
+              if (!isInvalid) config.onConfirm(inputValue);
+            }}
+            disabled={
+              (config.placeholder === '(00)00000-0000' || config.title?.toLowerCase().includes('whatsapp')) &&
+              inputValue.length > 0 &&
+              inputValue.length !== 14
+            }
+            className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-colors active:bg-primary/20 text-primary hover:bg-white/5 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed`}
           >
             {config.confirmText || (config.type === 'confirm' ? 'Confirmar' : config.type === 'prompt' ? 'Salvar' : 'Entendido')}
           </button>

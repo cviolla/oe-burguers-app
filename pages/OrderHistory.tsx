@@ -117,7 +117,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack, onRepeatOrder, user
                             {order.status}
                           </span>
                         </div>
-                        <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest mt-0.5">{new Date(order.created_at).toLocaleDateString('pt-BR')} às {new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest mt-0.5">{new Date(order.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })} às {new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
                     <span className="text-sm font-black text-white">R$ {(order.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>

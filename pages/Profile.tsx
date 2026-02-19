@@ -18,6 +18,7 @@ interface ProfileProps {
   userOrders?: any[];
   showAlert?: (title: string, message: string, icon?: string) => void;
   showConfirm?: (title: string, message: string, confirmText?: string, cancelText?: string, icon?: string) => Promise<boolean>;
+  onRepeatOrder?: (order: any) => void;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -33,7 +34,10 @@ const Profile: React.FC<ProfileProps> = ({
   onUpdateName,
   onUpdatePhone,
   showPrompt,
-  userOrders = []
+  userOrders = [],
+  showAlert,
+  showConfirm,
+  onRepeatOrder
 }) => {
   const lastOrders = userOrders.slice(0, 3); // Pegar os 3 mais recentes
 
@@ -94,7 +98,7 @@ const Profile: React.FC<ProfileProps> = ({
               label="Telefone"
               sublabel={userPhone || 'Cadastrar telefone'}
               action={async () => {
-                const newPhone = await showPrompt?.('Editar WhatsApp', 'Digite seu novo número de telefone:', userPhone, '(00) 00000-0000');
+                const newPhone = await showPrompt?.('Editar WhatsApp', 'Digite seu novo número de telefone:', userPhone, '(00)00000-0000');
                 if (newPhone) onUpdatePhone(newPhone);
               }}
             />
@@ -175,8 +179,18 @@ const Profile: React.FC<ProfileProps> = ({
                     <p className="text-sm font-black mt-1">R$ {(order.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="flex-1 bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-primary/20">Repetir Pedido</button>
-                    <button className="px-5 border border-white/10 text-dark-text-secondary py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Ajuda</button>
+                    <button
+                      onClick={() => onRepeatOrder?.(order)}
+                      className="flex-1 bg-primary text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-primary/20"
+                    >
+                      Repetir Pedido
+                    </button>
+                    <button
+                      onClick={() => window.open(`https://wa.me/5521972724360?text=${encodeURIComponent(`Olá! Preciso de ajuda com o meu pedido #${order.short_id || order.id.slice(0, 5)}`)}`, '_blank')}
+                      className="px-5 border border-white/10 text-dark-text-secondary py-3 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+                    >
+                      Ajuda
+                    </button>
                   </div>
                 </div>
               ))

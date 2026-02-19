@@ -256,23 +256,57 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     const [hasInteracted, setHasInteracted] = useState(false);
     const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
 
+    const playNotificationSound = (isLoop = false) => {
+        try {
+            // Fallback: Web Audio API (Synthesized Beep) - Extremely reliable
+            const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
+            const context = new AudioContextClass();
+
+            const playTone = () => {
+                const osc = context.createOscillator();
+                const gain = context.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, context.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, context.currentTime + 0.5);
+                gain.gain.setValueAtTime(0, context.currentTime);
+                gain.gain.linearRampToValueAtTime(0.2, context.currentTime + 0.1);
+                gain.gain.linearRampToValueAtTime(0, context.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(context.destination);
+                osc.start();
+                osc.stop(context.currentTime + 0.5);
+            };
+
+            playTone();
+            if (context.state === 'suspended') {
+                console.log('🔈 AudioContext suspenso, tentando resumir...');
+                context.resume();
+            } else {
+                console.log('🔊 Áudio sintetizado disparado com sucesso');
+            }
+
+            // Primary: Audio Element (MP3)
+            if (audioRef.current) {
+                audioRef.current.loop = isLoop;
+                audioRef.current.play().catch(() => {
+                    // Silently fail if Audio element is blocked, tone already played
+                });
+            }
+        } catch (e) {
+            console.error('Audio error:', e);
+        }
+    };
+
     useEffect(() => {
-        // Alerta sonoro via Data URI (Bell sound) para evitar erros de 403/404
-        audioRef.current = new Audio('data:audio/mp3;base64,SUQzBAAAAAABEVRYWFhYAAAAHAAAAGNsYXVkaW8ubWUvYmVlcC9zb3VuZC8xMDU3LTMvVE9QRREAAAABVExFTgAAAAIAAAAyAFRQRTEAAAAbAAAAQmVlcCBzb3VuZCAtIGNsYXVkaW8ubWUvYmVlcC9UQUxCAAAADAAAAGJlZXAtc291bmQtMQBURVIBAAAAEAAAAGNvbnRhY3RAbXNvdW5kLm1lAFRDT04AAAAGAAAAYmVlcC8AVElUMgAAABAAAABCZWVwIFNvdW5kIC0gMQAA//7ExAAAAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUVNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVV//7ExA0AAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBVVVVVVVVVVVVVVVVVVVV//7ExByAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBVVVVVVVVVVVVVVVVVVVVVVVV');
-        audioRef.current.loop = true;
+        // Alerta sonoro via Data URI (Verified short beep)
+        const base64Beep = 'data:audio/mp3;base64,SUQzBAAAAAABEVRYWFhYAAAAHAAAAG5vdGlmaWNhdGlvbi5tcDMAVElUMgAAABAAAABOb3RpZmljYXRpb24AAAD/7ExAAf8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB//7ExAnv8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB//7ExAzz8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB//7ExA8v8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB';
+        audioRef.current = new Audio(base64Beep);
 
         const handleInteraction = () => {
             setHasInteracted(true);
-            // Desbloqueia áudio no navegador
-            if (audioRef.current) {
-                audioRef.current.play().then(() => {
-                    audioRef.current.pause();
-                    audioRef.current.currentTime = 0;
-                }).catch(() => { });
-            }
-            if (Notification.permission === 'default') {
-                Notification.requestPermission();
-            }
+            console.log('✅ Interação detectada: Sistema de áudio desbloqueado');
+            // Unlock audio system
+            playNotificationSound(false);
             window.removeEventListener('click', handleInteraction);
         };
         window.addEventListener('click', handleInteraction);
@@ -286,12 +320,12 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         };
     }, []);
 
+    // Garante sincronia do áudio com o alerta visual
     useEffect(() => {
-        if (!hasInteracted || !audioRef.current) return;
-
-        if (newOrderAlert) {
-            audioRef.current.play().catch(console.error);
-        } else {
+        if (newOrderAlert && hasInteracted) {
+            console.log('🎵 Disparando som para novo pedido:', newOrderAlert.client_name);
+            playNotificationSound(true);
+        } else if (!newOrderAlert && audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
         }
@@ -302,43 +336,67 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         fetchOrders();
         fetchCustomers();
 
-        const channel = supabase
-            .channel('admin_dashboard_v3')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
-                if (payload.eventType === 'INSERT') {
-                    console.log('🔔 Novo pedido recebido:', payload.new);
-                    setNewOrderAlert(payload.new);
+        console.log('🔌 Iniciando conexão Realtime para pedidos...');
 
-                    if (pushEnabled && Notification.permission === 'granted') {
-                        new Notification('🍔 NOVO PEDIDO!', {
-                            body: `${payload.new.client_name} - R$ ${(payload.new.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-                            icon: '/favicon.ico'
-                        });
+        const channel = supabase
+            .channel('admin_orders_channel')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'orders'
+                },
+                (payload: any) => {
+                    console.log('🔔 EVENTO REALTIME DETECTADO:', payload);
+
+                    if (payload.new) {
+                        const newOrder = payload.new;
+                        console.log('📦 Novo pedido identificado:', newOrder.client_name);
+
+                        // Atualiza as listas imediatamente
+                        fetchOrders();
+                        onRefresh?.();
+
+                        // Dispara o alerta visual e sonoro
+                        setNewOrderAlert(newOrder);
+
+                        // Push Notification (Nativa)
+                        if (Notification.permission === 'granted') {
+                            new Notification('🍔 NOVO PEDIDO!', {
+                                body: `${newOrder.client_name} - R$ ${(newOrder.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+                                icon: '/favicon.ico',
+                                tag: 'new-order-' + newOrder.id // Evita duplicatas se disparar várias vezes
+                            });
+                        }
                     }
                 }
-                fetchOrders();
-                onRefresh?.();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
-                fetchCustomers();
-            })
-            .subscribe((status) => {
+            )
+            .subscribe((status, err) => {
+                console.log('📡 Status da Conexão Realtime:', status);
+                if (err) console.error('❌ Erro na assinatura Realtime:', err);
+
                 if (status === 'CHANNEL_ERROR') {
-                    console.error('❌ Erro na assinatura Realtime. Recarregando...');
-                    setTimeout(() => fetchOrders(), 5000);
+                    console.error('⚠️ Falha no canal. Verifique se o Realtime está ativo no banco.');
+                    // Fallback de polling caso o Realtime falhe
+                    const interval = setInterval(() => fetchOrders(), 30000);
+                    return () => clearInterval(interval);
                 }
             });
 
-        // Fallback: Verificar novos pedidos a cada 60 segundos por segurança
-        const fallbackInterval = setInterval(() => {
-            fetchOrders();
-            onRefresh?.();
-        }, 30000);
-
+        // Cleanup da subscrição
         return () => {
+            console.log('🔌 Fechando conexão Realtime...');
             supabase.removeChannel(channel);
-            clearInterval(fallbackInterval);
         };
+    }, []);
+
+    // Fallback de segurança: Verificar novos pedidos a cada 60 segundos (opcional, já temos no realtime)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchOrders();
+        }, 60000);
+        return () => clearInterval(interval);
     }, []);
 
     const [onlineTime, setOnlineTime] = useState(0);
@@ -652,19 +710,26 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         setLoading(false);
     };
 
-    const handleArchiveClient = async (phone: string, status: boolean) => {
+    const handleArchiveClient = async (phone: string, status: boolean, name?: string) => {
         if (loading) return;
         setLoading(true);
-        const { error } = await supabase
-            .from('customers')
-            .upsert({ phone: phone.trim(), is_archived: status });
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .upsert({
+                    phone: phone.trim(),
+                    name: name?.trim() || 'Cliente sem Nome',
+                    is_archived: status
+                }, { onConflict: 'phone' });
 
-        if (error) {
-            showAlert?.('Erro', 'Não foi possível arquivar o cliente: ' + error.message, 'error_outline');
+            if (error) throw error;
+            await fetchCustomers();
+        } catch (error: any) {
+            console.error('Erro ao arquivar cliente:', error);
+            showAlert?.('Erro', 'Não foi possível arquivar o cliente: ' + (error.message || 'Erro desconhecido'), 'error_outline');
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
-        if (!error) fetchCustomers();
     };
 
     const handleDeleteClient = async (phone: string) => {
@@ -1047,7 +1112,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            handleArchiveClient(client.phone, !client.is_archived);
+                                            handleArchiveClient(client.phone, !client.is_archived, client.name);
                                         }}
                                         className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${client.is_archived ? 'bg-emerald-500/10 text-emerald-500' : 'bg-white/5 text-white/40 hover:bg-amber-500/20 hover:text-amber-500'}`}
                                     >
@@ -1079,12 +1144,12 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             <div className="space-y-2 pt-3 border-t border-white/5">
                                 <div className="flex items-center gap-2 text-white/40">
                                     <span className="material-icons-round text-xs">location_on</span>
-                                    <p className="text-[9px] font-bold uppercase tracking-wide truncate">{client.neighborhood || 'Bairro ñ inf.'}</p>
+                                    <p className="text-[9px] font-bold uppercase tracking-wide truncate">{client.neighborhood || 'Não informado'}</p>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-white/20">
                                         <span className="material-icons-round text-xs">history</span>
-                                        <p className="text-[7px] font-black uppercase tracking-widest">Último: {new Date(client.last_order_at).toLocaleDateString()}</p>
+                                        <p className="text-[7px] font-black uppercase tracking-widest">Último: {new Date(client.last_order_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}</p>
                                     </div>
                                     <a
                                         href={`https://wa.me/55${client.phone?.replace(/\D/g, '')}`}
@@ -1255,9 +1320,9 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                         <span className="text-[9px] font-black uppercase tracking-widest leading-none md:text-[10px]">
                             {tab.id === 'pdv' ? 'Início' :
                                 tab.id === 'vendas' ? 'Vendas' :
-                                    tab.id === 'clientes' ? 'Clients' :
+                                    tab.id === 'clientes' ? 'Clientes' :
                                         tab.id === 'cozinha' ? 'Cozinha' :
-                                            tab.id === 'cardapio' ? 'Menu' :
+                                            tab.id === 'cardapio' ? 'Cardápio' :
                                                 tab.id === 'logistica' ? 'Entr.' : tab.label.split(' ')[0]}
                         </span>
 
@@ -1304,16 +1369,8 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     <div className="flex gap-2">
                         <button
                             onClick={() => {
-                                if (audioRef.current) {
-                                    audioRef.current.play().then(() => {
-                                        setTimeout(() => {
-                                            if (audioRef.current) {
-                                                audioRef.current.pause();
-                                                audioRef.current.currentTime = 0;
-                                            }
-                                        }, 2000);
-                                    }).catch(console.error);
-                                }
+                                setHasInteracted(true);
+                                playNotificationSound(false);
                             }}
                             className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-white/5 border-white/10 text-white/40 hover:text-primary transition-all active:scale-95"
                             title="Testar Som de Alerta"
@@ -1598,7 +1655,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                         >
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-black text-white/80">{new Date(order.created_at).toLocaleDateString()}</span>
+                                                    <span className="text-xs font-black text-white/80">{new Date(order.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
                                                     <span className="text-[10px] font-bold text-white/20 group-hover:text-primary transition-colors uppercase">{new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                             </td>
@@ -2232,7 +2289,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                             <span className="material-icons-round text-sm">schedule</span>
                                             <p className="text-[9px] font-black uppercase tracking-widest">Horário</p>
                                         </div>
-                                        <p className="text-[10px] font-bold text-white/70">{new Date(selectedOrder.created_at).toLocaleDateString()}</p>
+                                        <p className="text-[10px] font-bold text-white/70">{new Date(selectedOrder.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}</p>
                                         <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">{new Date(selectedOrder.created_at).toLocaleTimeString('pt-BR')}</p>
                                     </div>
                                 </div>
@@ -2298,7 +2355,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                             onClick={() => setSelectedOrder(null)}
                                             className="bg-primary text-dark-bg py-3.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all"
                                         >
-                                            Concluir Visão
+                                            Fechar
                                         </button>
                                     </>
                                 )}
@@ -2561,25 +2618,65 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </div>
                 )
             }
-            {/* Alerta de Novo Pedido (Som e Visual) */}
+            {/* Alerta de Novo Pedido (Som e Visual Moderno) */}
             {newOrderAlert && (
-                <div className="fixed inset-0 z-[200] bg-dark-bg/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
-                    <div className="w-full max-w-sm bg-dark-card border border-primary/20 rounded-3xl shadow-[0_0_100px_rgba(255,183,0,0.2)] p-10 text-center space-y-8 animate-in zoom-in-95 duration-500">
-                        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto relative">
-                            <span className="material-icons-round text-6xl text-primary animate-bounce">notifications_active</span>
-                            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 animate-in fade-in duration-500">
+                    <div
+                        className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+                        onClick={() => setNewOrderAlert(null)}
+                    />
+                    <div className="bg-dark-card w-full max-w-sm rounded-[2.5rem] border border-primary/30 shadow-[0_0_100px_rgba(255,183,0,0.3)] relative z-[301] overflow-hidden animate-in zoom-in-95 duration-500 ring-2 ring-primary/20">
+                        <div className="p-10 flex flex-col items-center text-center space-y-6">
+                            <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center text-primary relative">
+                                <span className="material-icons-round text-6xl animate-bounce">shopping_cart</span>
+                                <div className="absolute inset-0 bg-primary/20 rounded-3xl animate-ping"></div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <h2 className="text-3xl font-black text-white tracking-tighter leading-none uppercase">
+                                    Novo Pedido!
+                                </h2>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-primary px-2">
+                                        {newOrderAlert.client_name}
+                                    </p>
+                                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em]">
+                                        Acaba de realizar uma compra
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="w-full bg-white/5 rounded-2xl p-4 border border-white/5">
+                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Total do Pedido</p>
+                                <p className="text-2xl font-black text-white">
+                                    R$ {(newOrderAlert.total_cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-black uppercase tracking-tighter">Novo Pedido Recebido!</h2>
-                            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">{newOrderAlert.client_name} acabou de fazer um pedido</p>
+
+                        <div className="flex border-t border-white/10">
+                            <button
+                                onClick={() => setNewOrderAlert(null)}
+                                className="flex-1 py-7 text-xs font-black uppercase tracking-[0.3em] text-primary hover:bg-primary/10 transition-colors active:bg-primary/20"
+                            >
+                                Entendido / Fechar Alerta
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setNewOrderAlert(null)}
-                            className="w-full bg-primary py-5 rounded-2xl text-dark-bg font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all text-xs"
-                        >
-                            ENTENDIDO / PARAR SOM
-                        </button>
                     </div>
+                </div>
+            )}
+
+            {/* Overlay de Desbloqueio de Som (Caso não tenha interagido) */}
+            {!hasInteracted && (
+                <div
+                    onClick={() => {
+                        setHasInteracted(true);
+                        playNotificationSound(false);
+                    }}
+                    className="fixed bottom-6 right-6 z-[250] bg-primary text-dark-bg px-6 py-4 rounded-2xl font-black uppercase tracking-widest shadow-2xl animate-bounce flex items-center gap-3 cursor-pointer border-4 border-white/20"
+                >
+                    <span className="material-icons-round">volume_up</span>
+                    ATIVAR ALERTAS SONOROS
                 </div>
             )}
         </div >
