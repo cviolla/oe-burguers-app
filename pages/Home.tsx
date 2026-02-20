@@ -295,7 +295,12 @@ const ProductCard: React.FC<{
     className="glass p-3 rounded-[2rem] flex gap-4 active:scale-[0.98] transition-all duration-500 group premium-shadow border border-white/5 relative overflow-hidden"
   >
     <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-[1.5rem] shadow-xl">
-      <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+      <img
+        src={product.image}
+        alt={product.name}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none select-none"
+        draggable="false"
+      />
       {product.isBestSeller && (
         <div className="absolute top-2 left-2 bg-amber-500 text-dark-bg text-[7px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg">🔥 Best</div>
       )}

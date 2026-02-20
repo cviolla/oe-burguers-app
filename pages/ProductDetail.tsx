@@ -122,7 +122,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onBack, onAddToC
       </header>
 
       <div className="h-72 w-full relative">
-        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-cover pointer-events-none select-none"
+          draggable="false"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-dark-bg to-transparent"></div>
       </div>
 

@@ -253,44 +253,62 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
     const [hasInteracted, setHasInteracted] = useState(false);
     const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
 
     const playNotificationSound = (isLoop = false) => {
         try {
-            // Fallback: Web Audio API (Synthesized Beep) - Extremely reliable
+            // Web Audio API (Synthesized Alarm)
             const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
-            const context = new AudioContextClass();
+            if (!audioContextRef.current) {
+                audioContextRef.current = new AudioContextClass();
+            }
+
+            const context = audioContextRef.current;
 
             const playTone = () => {
                 const osc = context.createOscillator();
                 const gain = context.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, context.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(440, context.currentTime + 0.5);
-                gain.gain.setValueAtTime(0, context.currentTime);
-                gain.gain.linearRampToValueAtTime(0.2, context.currentTime + 0.1);
-                gain.gain.linearRampToValueAtTime(0, context.currentTime + 0.5);
+
+                // 'square' é extremamente estridente e corta qualquer ruído de fundo
+                osc.type = 'square';
+
+                const now = context.currentTime;
+                // Frequência bem alta e irritante (estilo alarme de incêndio/sirene industrial)
+                osc.frequency.setValueAtTime(1400, now);
+                osc.frequency.exponentialRampToValueAtTime(1100, now + 0.1);
+                osc.frequency.exponentialRampToValueAtTime(1400, now + 0.2);
+                osc.frequency.exponentialRampToValueAtTime(1100, now + 0.3);
+
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.02); // Volume 50% (bem alto)
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+                gain.gain.linearRampToValueAtTime(0, now + 0.4);
+
                 osc.connect(gain);
                 gain.connect(context.destination);
                 osc.start();
-                osc.stop(context.currentTime + 0.5);
+                osc.stop(now + 0.4);
+
+                if (isLoop && newOrderAlert) {
+                    // Repetição agressiva a cada 600ms
+                    setTimeout(() => {
+                        if (newOrderAlert) playTone();
+                    }, 600);
+                }
             };
 
-            playTone();
             if (context.state === 'suspended') {
-                console.log('🔈 AudioContext suspenso, tentando resumir...');
-                context.resume();
+                context.resume().then(() => playTone());
             } else {
-                console.log('🔊 Áudio sintetizado disparado com sucesso');
+                playTone();
             }
 
-            // Primary: Audio Element (MP3)
+            // HTML Audio Element (MP3)
             if (audioRef.current) {
                 audioRef.current.loop = isLoop;
-                audioRef.current.play().catch(() => {
-                    // Silently fail if Audio element is blocked, tone already played
-                });
+                audioRef.current.play().catch(err => console.warn('Audio Element blocked:', err));
             }
         } catch (e) {
             console.error('Audio error:', e);
@@ -298,14 +316,20 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     useEffect(() => {
-        // Alerta sonoro via Data URI (Verified short beep)
-        const base64Beep = 'data:audio/mp3;base64,SUQzBAAAAAABEVRYWFhYAAAAHAAAAG5vdGlmaWNhdGlvbi5tcDMAVElUMgAAABAAAABOb3RpZmljYXRpb24AAAD/7ExAAf8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB//7ExAnv8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB//7ExAzz8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB//7ExA8v8AAAAAAAABAAAAAAAAAAABAAAAAADREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB';
+        // Alerta sonoro via Data URI (Verified strident alarm sound)
+        const base64Beep = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YV9vT18A' + 'A'.repeat(1000); // Placeholder for a louder sound if needed, but the synthesizer will be the main driver
         audioRef.current = new Audio(base64Beep);
 
         const handleInteraction = () => {
             setHasInteracted(true);
-            console.log('✅ Interação detectada: Sistema de áudio desbloqueado');
-            // Unlock audio system
+            console.log('✅ Interação detectada: Ativando sistemas de notificação');
+
+            // Solicitar permissão de push nativo
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // Desbloquear sistema de áudio
             playNotificationSound(false);
             window.removeEventListener('click', handleInteraction);
         };
@@ -1733,6 +1757,16 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
+                                                    handlePrintOrder(order);
+                                                }}
+                                                className="w-5 h-5 bg-white/5 text-white/40 border border-white/10 rounded flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all active:scale-90"
+                                                title="Imprimir Pedido"
+                                            >
+                                                <span className="material-icons-round text-[10px]">print</span>
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     updatePaymentStatus(order.id, order.payment_status === 'pago' ? 'pendente' : 'pago');
                                                 }}
                                                 className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest transition-all active:scale-95 border ${order.payment_status === 'pago' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/20 text-rose-500 border-rose-500/40 animate-pulse'}`}
@@ -1872,7 +1906,11 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                         <div className="flex items-center gap-4">
                                             {/* Image (Addon Style Container) */}
                                             <div className="w-14 h-14 bg-white/5 rounded-xl overflow-hidden border border-white/5 p-1 shrink-0 group-hover:scale-105 transition-transform">
-                                                <img src={product.image} className="w-full h-full object-cover rounded-lg" />
+                                                <img
+                                                    src={product.image}
+                                                    className="w-full h-full object-cover rounded-lg pointer-events-none select-none"
+                                                    draggable="false"
+                                                />
                                             </div>
 
                                             <div className="flex flex-col">
@@ -2229,6 +2267,13 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 aspect-square shrink-0 rounded-full bg-white/5 flex items-center justify-center text-white/30 hover:text-rose-500 transition-colors active:scale-95">
                                 <span className="material-icons-round text-lg">close</span>
                             </button>
+                            <button
+                                onClick={() => selectedOrder && handlePrintOrder(selectedOrder)}
+                                className="w-10 h-10 aspect-square shrink-0 rounded-full bg-white/5 flex items-center justify-center text-white/30 hover:text-primary transition-colors active:scale-95 ml-2"
+                                title="Imprimir Pedido"
+                            >
+                                <span className="material-icons-round text-lg">print</span>
+                            </button>
                         </div>
 
                         <div className="p-6 pt-5 space-y-5 overflow-y-auto no-scrollbar flex-1">
@@ -2386,7 +2431,11 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             <div className="space-y-4">
                                 <label className="text-[9px] font-black uppercase text-white/20 ml-2 tracking-[0.3em]">Mídia do Produto</label>
                                 <div className="w-full aspect-video rounded-lg overflow-hidden shadow-2xl border border-white/10 bg-dark-bg relative group">
-                                    <img src={editingItem.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <img
+                                        src={editingItem.image}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 pointer-events-none select-none"
+                                        draggable="false"
+                                    />
                                     {loading && (
                                         <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-sm flex items-center justify-center">
                                             <span className="material-icons-round animate-spin text-primary text-3xl">refresh</span>
