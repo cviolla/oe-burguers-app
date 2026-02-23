@@ -877,7 +877,6 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                         description: descTrimmed || '',
                         image_url: editingItem.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop',
                         category_id: editingItem.category_id || (categories.length > 0 ? categories[0].id : null),
-                        price_cents: priceCents, // Some schemas use price_cents directly on items
                         is_active: true
                     })
                     .select()
@@ -1866,7 +1865,9 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                             searchMatch(p.category, itemSearch))
                     );
 
-                    if (catProducts.length === 0) return null;
+                    // Ocultar a categoria apenas se estiver buscando e não houver resultados.
+                    // Se não estiver buscando, mostrar a categoria vazia para permitir adicionar produtos.
+                    if (itemSearch && catProducts.length === 0) return null;
 
                     return (
                         <section key={cat.id} className="space-y-4">
