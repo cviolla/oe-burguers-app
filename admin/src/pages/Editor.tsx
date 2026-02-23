@@ -870,13 +870,17 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 if (variantError) throw variantError;
             } else {
                 // Create new item
+                const baseName = nameTrimmed || 'Novo Produto';
+                const generatedSlug = baseName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 7);
+
                 const { data: newItem, error: itemError } = await supabase
                     .from('items')
                     .insert({
-                        name: nameTrimmed || 'Novo Produto',
+                        name: baseName,
                         description: descTrimmed || '',
                         image_url: editingItem.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop',
                         category_id: editingItem.category_id || (categories.length > 0 ? categories[0].id : null),
+                        slug: generatedSlug,
                         is_active: true
                     })
                     .select()
