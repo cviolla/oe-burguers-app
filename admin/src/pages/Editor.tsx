@@ -999,21 +999,47 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             const nameTrimmed = editingAddon.name.trim();
             const priceCents = Math.round(Number(editingAddon.displayPrice.replace(/\D/g, "")));
 
-            const { error } = await supabase
-                .from('options')
-                .update({
-                    name: nameTrimmed,
-                    price_delta_cents: priceCents
-                })
-                .eq('id', editingAddon.id);
+            if (editingAddon.id) {
+                // Update
+                const { error } = await supabase
+                    .from('options')
+                    .update({
+                        name: nameTrimmed,
+                        price_delta_cents: priceCents
+                    })
+                    .eq('id', editingAddon.id);
 
-            if (error) throw error;
+                if (error) throw error;
+            } else {
+                // Insert
+                const generatedSlug = nameTrimmed.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 7);
+
+                let payload: any = {
+                    name: nameTrimmed,
+                    price_delta_cents: priceCents,
+                    slug: generatedSlug,
+                    is_active: true
+                };
+
+                // Try to inherit the group ID from an existing addon. 
+                // Assumes addons array contains at least one item and we copy its group reference.
+                if (addons && addons.length > 0) {
+                    if (addons[0].option_group_id !== undefined) payload.option_group_id = addons[0].option_group_id;
+                    if (addons[0].group_id !== undefined) payload.group_id = addons[0].group_id;
+                }
+
+                const { error } = await supabase
+                    .from('options')
+                    .insert(payload);
+
+                if (error) throw error;
+            }
 
             setEditingAddon(null);
             onRefresh();
         } catch (error: any) {
             console.error('Erro ao atualizar adicional:', error);
-            showAlert?.('Erro', 'Não foi possível atualizar o adicional: ' + (error.message || 'Erro desconhecido'), 'error_outline');
+            showAlert?.('Erro', 'Não foi possível salvar o adicional: ' + (error.message || 'Erro desconhecido'), 'error_outline');
         } finally {
             setLoading(false);
         }
@@ -1957,8 +1983,23 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     );
                 })
             ) : (
-                <div className="space-y-8">
-
+                <div className="space-y-6">
+                    <div className="flex justify-end pr-1">
+                        <button
+                            onClick={() => {
+                                setEditingAddon({
+                                    name: '',
+                                    price_delta_cents: 0,
+                                    displayPrice: 'R$ 0,00',
+                                    is_active: true
+                                });
+                            }}
+                            className="bg-emerald-500 py-2.5 px-6 rounded-xl font-black text-dark-bg text-[10px] uppercase shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2 hover:bg-white"
+                        >
+                            <span className="material-icons-round text-base">add</span>
+                            Novo Adicional
+                        </button>
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {(addons || []).map(addon => (
