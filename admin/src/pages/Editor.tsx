@@ -568,9 +568,6 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handlePrintOrder = (order: Order) => {
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
-
         const date = new Date(order.created_at).toLocaleString('pt-BR');
 
         const itemsHtml = order.order_items?.map(item => `
@@ -580,93 +577,73 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             </div>
         `).join('') || '';
 
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Impressão de Pedido - #${escapeHtml(order.short_id)}</title>
-                    <style>
-                        @page { margin: 0; }
-                        body { 
-                            font-family: 'Courier New', Courier, monospace; 
-                            width: 80mm; 
-                            margin: 0; 
-                            padding: 5mm;
-                            font-size: 12px;
-                            color: #000;
-                        }
-                        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
-                        .footer { border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; text-align: center; font-size: 10px; }
-                        .section { margin-bottom: 8px; }
-                        .title { font-weight: bold; font-size: 16px; text-transform: uppercase; }
-                        .obs { background: #f0f0f0; padding: 5px; margin-top: 5px; font-style: italic; border: 1px solid #ddd; }
-                        .total { text-align: right; font-weight: bold; font-size: 14px; margin-top: 5px; border-top: 1px solid #000; padding-top: 5px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="title">OE BURGUERS</div>
-                        <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">PEDIDO #${escapeHtml(order.short_id)}</div>
-                        <div style="font-size: 10px;">${escapeHtml(date)}</div>
-                    </div>
-                    
-                    <div class="section">
-                        <div style="font-weight: bold; font-size: 13px;">${escapeHtml(order.client_name)}</div>
-                        <div>${escapeHtml(order.client_phone)}</div>
-                    </div>
+        const receiptHtml = `
+            <div style="font-family: 'Courier New', Courier, monospace; width: 80mm; margin: 0; padding: 5mm; font-size: 12px; color: #000;">
+                <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="font-weight: bold; font-size: 16px; text-transform: uppercase;">OE BURGUERS</div>
+                    <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">PEDIDO #${escapeHtml(order.short_id)}</div>
+                    <div style="font-size: 10px;">${escapeHtml(date)}</div>
+                </div>
+                
+                <div style="margin-bottom: 8px;">
+                    <div style="font-weight: bold; font-size: 13px;">${escapeHtml(order.client_name)}</div>
+                    <div>${escapeHtml(order.client_phone)}</div>
+                </div>
 
-                    <div class="section">
-                        <div style="font-weight: bold; margin-bottom: 3px; border-bottom: 1px solid #eee;">ITENS DO PEDIDO:</div>
-                        ${itemsHtml}
-                    </div>
+                <div style="margin-bottom: 8px;">
+                    <div style="font-weight: bold; margin-bottom: 3px; border-bottom: 1px solid #eee;">ITENS DO PEDIDO:</div>
+                    ${itemsHtml}
+                </div>
 
-                    <div class="total">
-                        TOTAL: ${formatCurrency(order.total_cents)}
-                    </div>
+                <div style="text-align: right; font-weight: bold; font-size: 14px; margin-top: 5px; border-top: 1px solid #000; padding-top: 5px;">
+                    TOTAL: ${formatCurrency(order.total_cents)}
+                </div>
 
-                    <div class="section" style="margin-top: 10px;">
-                        <div style="font-weight: bold; text-transform: uppercase; font-size: 11px;">ENTREGA / RETIRADA:</div>
-                        <div style="font-weight: bold;">${order.is_pickup ? '📦 RETIRADA NO LOCAL' : '🛵 ENTREGA EM DOMICÍLIO'}</div>
-                        ${!order.is_pickup ? `
-                            <div style="margin-top: 3px;">
-                                ${escapeHtml(order.delivery_address)}<br>
-                                <strong>Bairro:</strong> ${escapeHtml(order.neighborhood)}
-                            </div>
-                        ` : ''}
-                    </div>
-
-                    <div class="section">
-                        <div style="font-weight: bold; text-transform: uppercase; font-size: 11px;">PAGAMENTO:</div>
-                        <div>${escapeHtml(order.payment_method.toUpperCase())} (${escapeHtml(order.payment_status.toUpperCase())})</div>
-                    </div>
-
-                    ${order.observation ? `
-                        <div class="obs">
-                            <strong>OBSERVAÇÕES:</strong><br>
-                            ${escapeHtml(order.observation)}
+                <div style="margin-bottom: 8px; margin-top: 10px;">
+                    <div style="font-weight: bold; text-transform: uppercase; font-size: 11px;">ENTREGA / RETIRADA:</div>
+                    <div style="font-weight: bold;">${order.is_pickup ? '📦 RETIRADA NO LOCAL' : '🛵 ENTREGA EM DOMICÍLIO'}</div>
+                    ${!order.is_pickup ? `
+                        <div style="margin-top: 3px;">
+                            ${escapeHtml(order.delivery_address)}<br>
+                            <strong>Bairro:</strong> ${escapeHtml(order.neighborhood)}
                         </div>
                     ` : ''}
+                </div>
 
-                    <div class="footer">
-                        Desenvolvido por OE BURGUERS<br>
-                        ${escapeHtml(date)}
+                <div style="margin-bottom: 8px;">
+                    <div style="font-weight: bold; text-transform: uppercase; font-size: 11px;">PAGAMENTO:</div>
+                    <div>${escapeHtml(order.payment_method.toUpperCase())} (${escapeHtml(order.payment_status.toUpperCase())})</div>
+                </div>
+
+                ${order.observation ? `
+                    <div style="background: #f0f0f0; padding: 5px; margin-top: 5px; font-style: italic; border: 1px solid #ddd;">
+                        <strong>OBSERVAÇÕES:</strong><br>
+                        ${escapeHtml(order.observation)}
                     </div>
-                    <script>
-                        window.onload = function() {
-                            // Pequeno delay para garantir renderização no mobile
-                            setTimeout(function() {
-                                window.print();
-                            }, 300);
-                        }
+                ` : ''}
 
-                        // Fecha a aba automaticamente após a impressão (ou cancelamento)
-                        window.onafterprint = function() {
-                            window.close();
-                        }
-                    </script>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
+                <div style="border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; text-align: center; font-size: 10px;">
+                    Desenvolvido por OE BURGUERS<br>
+                    ${escapeHtml(date)}
+                </div>
+            </div>
+        `;
+
+        // Remove container antigo se existir
+        const oldContainer = document.getElementById('print-receipt');
+        if (oldContainer) {
+            oldContainer.remove();
+        }
+
+        const printContainer = document.createElement('div');
+        printContainer.id = 'print-receipt';
+        printContainer.innerHTML = receiptHtml;
+        document.body.appendChild(printContainer);
+
+        // Dispara a impressão na mesma janela
+        setTimeout(() => {
+            window.print();
+        }, 100);
     };
 
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
