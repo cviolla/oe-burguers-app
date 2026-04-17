@@ -652,8 +652,15 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     </div>
                     <script>
                         window.onload = function() {
-                            window.print();
-                            setTimeout(() => { window.close(); }, 500);
+                            // Pequeno delay para garantir renderização no mobile
+                            setTimeout(function() {
+                                window.print();
+                            }, 300);
+                        }
+
+                        // Fecha a aba automaticamente após a impressão (ou cancelamento)
+                        window.onafterprint = function() {
+                            window.close();
                         }
                     </script>
                 </body>
