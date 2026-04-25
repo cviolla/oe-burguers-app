@@ -578,7 +578,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         `).join('') || '';
 
         const receiptHtml = `
-            <div style="font-family: 'Courier New', Courier, monospace; width: 80mm; margin: 0; padding: 5mm; font-size: 12px; color: #000;">
+            <div style="font-family: 'Courier New', Courier, monospace; width: 100%; max-width: 75mm; box-sizing: border-box; margin: 0 auto; padding: 2mm 0; font-size: 12px; color: #000;">
                 <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
                     <div style="font-weight: bold; font-size: 16px; text-transform: uppercase;">OE BURGUERS</div>
                     <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">PEDIDO #${escapeHtml(order.short_id)}</div>
