@@ -571,60 +571,64 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         const date = new Date(order.created_at).toLocaleString('pt-BR');
 
         const itemsHtml = order.order_items?.map(item => `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold;">
-                <span style="flex: 1;">${item.quantity}x ${escapeHtml(item.product_name)}</span>
-                <span style="margin-left: 10px;">${formatCurrency(item.price_cents * item.quantity)}</span>
+            <div style="display: flex; flex-direction: column; margin-bottom: 8px; border-bottom: 1px dotted #eee; padding-bottom: 4px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 11px;">
+                    <span style="flex: 1; padding-right: 5px;">${item.quantity}x ${escapeHtml(item.product_name)}</span>
+                    <span style="white-space: nowrap;">${formatCurrency(item.price_cents * item.quantity)}</span>
+                </div>
             </div>
         `).join('') || '';
 
         const receiptHtml = `
-            <div style="font-family: 'Courier New', Courier, monospace; width: 100%; max-width: 75mm; box-sizing: border-box; margin: 0 auto; padding: 2mm 0; font-size: 12px; color: #000;">
-                <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
-                    <div style="font-weight: bold; font-size: 16px; text-transform: uppercase;">OE BURGUERS</div>
-                    <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">PEDIDO #${escapeHtml(order.short_id)}</div>
-                    <div style="font-size: 10px;">${escapeHtml(date)}</div>
+            <div style="font-family: 'Courier New', Courier, monospace; width: 56mm; max-width: 56mm; box-sizing: border-box; margin: 0; padding: 0; font-size: 11px; color: #000; line-height: 1.2;">
+                <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+                    <div style="font-weight: bold; font-size: 14px; text-transform: uppercase;">OE BURGUERS</div>
+                    <div style="font-size: 16px; font-weight: bold; margin-top: 2px;">PEDIDO #${escapeHtml(order.short_id)}</div>
+                    <div style="font-size: 9px;">${escapeHtml(date)}</div>
                 </div>
                 
-                <div style="margin-bottom: 8px;">
-                    <div style="font-weight: bold; font-size: 13px;">${escapeHtml(order.client_name)}</div>
-                    <div>${escapeHtml(order.client_phone)}</div>
+                <div style="margin-bottom: 10px;">
+                    <div style="font-weight: bold; font-size: 12px; text-transform: uppercase;">${escapeHtml(order.client_name)}</div>
+                    <div style="font-size: 11px;">${escapeHtml(order.client_phone)}</div>
                 </div>
 
-                <div style="margin-bottom: 8px;">
-                    <div style="font-weight: bold; margin-bottom: 3px; border-bottom: 1px solid #eee;">ITENS DO PEDIDO:</div>
+                <div style="margin-bottom: 10px;">
+                    <div style="font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #000; font-size: 10px; text-transform: uppercase;">ITENS DO PEDIDO:</div>
                     ${itemsHtml}
                 </div>
 
-                <div style="text-align: right; font-weight: bold; font-size: 14px; margin-top: 5px; border-top: 1px solid #000; padding-top: 5px;">
-                    TOTAL: ${formatCurrency(order.total_cents)}
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; margin-top: 5px; border-top: 1px solid #000; padding-top: 5px;">
+                    <span>TOTAL:</span>
+                    <span>${formatCurrency(order.total_cents)}</span>
                 </div>
 
-                <div style="margin-bottom: 8px; margin-top: 10px;">
-                    <div style="font-weight: bold; text-transform: uppercase; font-size: 11px;">ENTREGA / RETIRADA:</div>
-                    <div style="font-weight: bold;">${order.is_pickup ? '📦 RETIRADA NO LOCAL' : '🛵 ENTREGA EM DOMICÍLIO'}</div>
+                <div style="margin-bottom: 10px; margin-top: 12px; border-top: 1px dashed #eee; padding-top: 8px;">
+                    <div style="font-weight: bold; text-transform: uppercase; font-size: 10px;">ENTREGA / RETIRADA:</div>
+                    <div style="font-weight: bold; font-size: 11px; margin-top: 2px;">${order.is_pickup ? '📦 RETIRADA NO LOCAL' : '🛵 ENTREGA EM DOMICÍLIO'}</div>
                     ${!order.is_pickup ? `
-                        <div style="margin-top: 3px;">
+                        <div style="margin-top: 4px; font-size: 11px; border-left: 2px solid #000; padding-left: 5px;">
                             ${escapeHtml(order.delivery_address)}<br>
                             <strong>Bairro:</strong> ${escapeHtml(order.neighborhood)}
                         </div>
                     ` : ''}
                 </div>
 
-                <div style="margin-bottom: 8px;">
-                    <div style="font-weight: bold; text-transform: uppercase; font-size: 11px;">PAGAMENTO:</div>
-                    <div>${escapeHtml(order.payment_method.toUpperCase())} (${escapeHtml(order.payment_status.toUpperCase())})</div>
+                <div style="margin-bottom: 10px;">
+                    <div style="font-weight: bold; text-transform: uppercase; font-size: 10px;">PAGAMENTO:</div>
+                    <div style="font-size: 11px;">${escapeHtml(order.payment_method.toUpperCase())} (${escapeHtml(order.payment_status.toUpperCase())})</div>
                 </div>
 
                 ${order.observation ? `
-                    <div style="background: #f0f0f0; padding: 5px; margin-top: 5px; font-style: italic; border: 1px solid #ddd;">
-                        <strong>OBSERVAÇÕES:</strong><br>
+                    <div style="background: #f9f9f9; padding: 4px; margin-top: 8px; font-style: italic; border: 1px solid #000; font-size: 10px;">
+                        <strong style="text-transform: uppercase;">OBSERVAÇÕES:</strong><br>
                         ${escapeHtml(order.observation)}
                     </div>
                 ` : ''}
 
-                <div style="border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; text-align: center; font-size: 10px;">
+                <div style="border-top: 1px dashed #000; padding-top: 8px; margin-top: 15px; text-align: center; font-size: 9px; opacity: 0.8;">
                     Desenvolvido por OE BURGUERS<br>
                     ${escapeHtml(date)}
+                    <br><br>.
                 </div>
             </div>
         `;

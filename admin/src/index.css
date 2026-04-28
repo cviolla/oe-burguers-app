@@ -235,14 +235,15 @@ textarea {
         display: block !important;
         position: relative !important;
         width: 100% !important;
-        max-width: 75mm !important;
-        padding: 5px !important;
-        margin: 0 auto !important;
+        max-width: 54mm !important;
+        padding: 0 !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
         color: black !important;
         background: white !important;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
+        font-family: 'Courier New', Courier, monospace !important;
     }
     #print-receipt * {
         color: black !important;
