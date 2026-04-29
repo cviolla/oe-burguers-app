@@ -216,10 +216,13 @@ textarea {
 #print-receipt {
     display: none;
 }
+
 @media print {
     @page {
         margin: 0;
+        size: auto;
     }
+
     body {
         margin: 0;
         padding: 0;
@@ -228,24 +231,66 @@ textarea {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
-    #root, .whatsapp-float {
+
+    #root,
+    .whatsapp-float,
+    .no-print {
         display: none !important;
     }
+
     #print-receipt {
         display: block !important;
-        position: relative !important;
-        width: 100% !important;
-        max-width: 54mm !important;
+        width: 58mm !important;
+        /* Largura padrão térmica */
+        max-width: 58mm !important;
+        margin: 0 auto !important;
         padding: 0 !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-        color: black !important;
-        background: white !important;
-        line-height: 1.1 !important;
         font-family: 'Courier New', Courier, monospace !important;
-    }
-    #print-receipt * {
+        font-size: 10pt !important;
         color: black !important;
+        line-height: 1.2 !important;
+        background: white !important;
+    }
+
+    #print-receipt * {
+        font-family: 'Courier New', Courier, monospace !important;
+        color: black !important;
+    }
+
+    .print-dashed {
+        border-top: 1px dashed black !important;
+        margin: 4px 0 !important;
+        width: 100% !important;
+    }
+
+    .print-bold {
+        font-weight: bold !important;
+    }
+
+    .print-lg {
+        font-size: 14pt !important;
+    }
+
+    .print-center {
+        text-align: center !important;
+    }
+
+    .print-right {
+        text-align: right !important;
+    }
+
+    /* Utilitário para colunas sem flexbox complexo */
+    .print-row {
+        clear: both;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .print-col-left {
+        float: left;
+    }
+
+    .print-col-right {
+        float: right;
     }
 }
