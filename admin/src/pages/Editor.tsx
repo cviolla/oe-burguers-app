@@ -582,27 +582,27 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         const receiptHtml = `
                 <div class="print-center">
                     <div class="print-bold print-lg">OE BURGUERS</div>
-                    <div class="print-bold" style="font-size: 14pt; margin-top: 4px;">PEDIDO #${escapeHtml(order.short_id)}</div>
-                    <div style="font-size: 9pt;">${escapeHtml(date)}</div>
+                    <div class="print-bold print-lg" style="margin-top: 4px;">PEDIDO #${escapeHtml(order.short_id)}</div>
+                    <div style="font-size: 8pt;">${escapeHtml(date)}</div>
                 </div>
                 
                 <div class="print-dashed"></div>
 
                 <div style="margin-bottom: 8px;">
-                    <div class="print-bold" style="font-size: 11pt;">CLIENTE: ${escapeHtml(order.client_name)}</div>
+                    <div class="print-bold">CLIENTE: ${escapeHtml(order.client_name)}</div>
                     <div>TEL: ${escapeHtml(order.client_phone)}</div>
                 </div>
 
                 <div class="print-dashed"></div>
 
                 <div style="margin-bottom: 8px;">
-                    <div class="print-bold" style="text-transform: uppercase; font-size: 9pt; margin-bottom: 4px;">ITENS:</div>
+                    <div class="print-bold" style="text-transform: uppercase; font-size: 8pt; margin-bottom: 4px;">ITENS:</div>
                     ${itemsHtml}
                 </div>
 
                 <div class="print-dashed"></div>
 
-                <div class="print-row print-bold" style="font-size: 12pt; margin: 6px 0;">
+                <div class="print-row print-bold" style="font-size: 11pt; margin: 6px 0;">
                     <span class="print-col-left">TOTAL:</span>
                     <span class="print-col-right">${formatCurrency(order.total_cents)}</span>
                 </div>
