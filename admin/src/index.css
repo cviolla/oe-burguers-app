@@ -240,16 +240,17 @@ textarea {
 
     #print-receipt {
         display: block !important;
-        width: 52mm !important;
-        max-width: 52mm !important;
-        margin: 0 auto !important;
-        padding: 0 3mm 0 1mm !important; /* Mais margem na direita para segurança */
+        width: 48mm !important;
+        max-width: 48mm !important;
+        margin: 0 !important;
+        padding: 0 2mm 10mm 1mm !important;
         box-sizing: border-box !important;
         font-family: 'Courier New', Courier, monospace !important;
         font-size: 9pt !important;
         color: black !important;
         line-height: 1.2 !important;
         background: white !important;
+        overflow: visible !important;
     }
 
     #print-receipt * {
@@ -282,22 +283,24 @@ textarea {
 
     /* Utilitário para colunas sem flexbox complexo */
     .print-row {
-        clear: both;
-        width: 100%;
-        display: block !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+        margin-bottom: 2px !important;
     }
 
     .print-col-left {
-        float: left;
-        width: 60% !important;
+        flex: 1 !important;
         word-wrap: break-word !important;
         text-align: left !important;
     }
 
     .print-col-right {
-        float: right;
-        width: 40% !important;
+        flex-shrink: 0 !important;
         text-align: right !important;
-        word-wrap: normal !important;
+        white-space: nowrap !important;
     }
 }

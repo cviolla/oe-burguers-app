@@ -571,11 +571,9 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         const date = new Date(order.created_at).toLocaleString('pt-BR');
 
         const itemsHtml = order.order_items?.map(item => `
-            <div style="margin-bottom: 6px;">
-                <div class="print-row print-bold">
-                    <span class="print-col-left">${item.quantity}x ${escapeHtml(item.product_name)}</span>
-                    <span class="print-col-right">${formatCurrency(item.price_cents * item.quantity)}</span>
-                </div>
+            <div class="print-row print-bold">
+                <span class="print-col-left">${item.quantity}x ${escapeHtml(item.product_name)}</span>
+                <span class="print-col-right">${formatCurrency(item.price_cents * item.quantity)}</span>
             </div>
         `).join('') || '';
 
@@ -613,7 +611,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                     <div class="print-bold" style="font-size: 9pt;">ENTREGA / RETIRADA:</div>
                     <div class="print-bold">${order.is_pickup ? '📦 RETIRADA NO LOCAL' : '🛵 ENTREGA EM DOMICÍLIO'}</div>
                     ${!order.is_pickup ? `
-                        <div style="margin-top: 4px; border-left: 2px solid black; padding-left: 6px;">
+                        <div style="margin-top: 4px; border-top: 1px solid #eee; padding-top: 2px;">
                             ${escapeHtml(order.delivery_address)}<br>
                             <strong>Bairro:</strong> ${escapeHtml(order.neighborhood)}
                         </div>
@@ -640,7 +638,9 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 <div class="print-center" style="margin-top: 10px; font-size: 8pt;">
                     OBRIGADO PELA PREFERÊNCIA!<br>
                     ${escapeHtml(date)}
-                    <br><br>.
+                    <br><br>
+                    . . . . . . . . . . . . . . .
+                    <br><br><br>
                 </div>
         `;
 
