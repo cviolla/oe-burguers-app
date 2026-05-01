@@ -1323,12 +1323,22 @@ const WhatsAppMovable: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
 export default App;
 
 const PrintView: React.FC<{ order: any }> = ({ order }) => {
+  useEffect(() => {
+    document.body.style.backgroundColor = 'white';
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, []);
+
+  if (!order) return <div style={{ color: 'black', padding: '20px' }}>Erro: Dados do pedido não encontrados.</div>;
+
   const date = new Date(order.created_at).toLocaleString('pt-BR');
   const formatCurrency = (value: number) => (value / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const escapeHtml = (unsafe: string) => (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
   return (
-    <div id="print-receipt" style={{ display: 'block', background: 'white', color: 'black', padding: '10px' }}>
+    <div style={{ background: 'white', color: 'black', minHeight: '100vh', width: '100%' }}>
+      <div id="print-receipt" style={{ display: 'block', margin: '0 auto' }}>
       <div className="print-center">
         <div className="print-bold print-lg">OE BURGUERS</div>
         <div className="print-bold print-lg" style={{ marginTop: '4px' }}>PEDIDO #{escapeHtml(order.short_id)}</div>
@@ -1397,6 +1407,7 @@ const PrintView: React.FC<{ order: any }> = ({ order }) => {
         <br /><br />
         . . . . . . . . . . . . . . .
         <br /><br /><br />
+      </div>
       </div>
     </div>
   );

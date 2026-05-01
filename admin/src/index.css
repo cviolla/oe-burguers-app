@@ -232,10 +232,19 @@ textarea {
         print-color-adjust: exact;
     }
 
-    #root,
+    /* Oculta elementos que não devem sair na impressão */
     .whatsapp-float,
-    .no-print {
+    .no-print,
+    header,
+    nav,
+    footer:not(#print-receipt footer),
+    button,
+    aside {
         display: none !important;
+    }
+
+    #root {
+        background: white !important;
     }
 
     #print-receipt {
