@@ -129,16 +129,23 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ onBack, onRepeatOrder, user
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                    <div className="flex gap-2">
                     <button
                       onClick={() => onRepeatOrder(order)}
                       className="flex-1 bg-primary text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                       <span className="material-icons-round text-sm">reorder</span>
-                      Repetir Pedido
+                      Repetir
                     </button>
-                    <button className="px-5 bg-dark-card border border-white/10 text-dark-text-secondary py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">
-                      Detalhes
+                    <button 
+                      onClick={() => {
+                        localStorage.setItem('print_data', JSON.stringify(order));
+                        window.open(window.location.origin + '?print=order', '_blank');
+                      }}
+                      className="px-4 bg-dark-card border border-white/10 text-primary py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="material-icons-round text-sm">print</span>
+                      Imprimir
                     </button>
                   </div>
                 </div>

@@ -568,97 +568,12 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
     const handlePrintOrder = (order: Order) => {
-        const date = new Date(order.created_at).toLocaleString('pt-BR');
-
-        const itemsHtml = order.order_items?.map(item => `
-            <div class="print-row print-bold">
-                <span class="print-col-left">${item.quantity}x ${escapeHtml(item.product_name)}</span>
-                <span class="print-col-right">${formatCurrency(item.price_cents * item.quantity)}</span>
-            </div>
-        `).join('') || '';
-
-        const receiptHtml = `
-                <div class="print-center">
-                    <div class="print-bold print-lg">OE BURGUERS</div>
-                    <div class="print-bold print-lg" style="margin-top: 4px;">PEDIDO #${escapeHtml(order.short_id)}</div>
-                    <div style="font-size: 8pt;">${escapeHtml(date)}</div>
-                </div>
-                
-                <div class="print-dashed"></div>
-
-                <div style="margin-bottom: 8px;">
-                    <div class="print-bold">CLIENTE: ${escapeHtml(order.client_name)}</div>
-                    <div>TEL: ${escapeHtml(order.client_phone)}</div>
-                </div>
-
-                <div class="print-dashed"></div>
-
-                <div style="margin-bottom: 8px;">
-                    <div class="print-bold" style="text-transform: uppercase; font-size: 8pt; margin-bottom: 4px;">ITENS:</div>
-                    ${itemsHtml}
-                </div>
-
-                <div class="print-dashed"></div>
-
-                <div class="print-row print-bold" style="font-size: 11pt; margin: 6px 0;">
-                    <span class="print-col-left">TOTAL:</span>
-                    <span class="print-col-right">${formatCurrency(order.total_cents)}</span>
-                </div>
-
-                <div class="print-dashed"></div>
-
-                <div style="margin-bottom: 8px;">
-                    <div class="print-bold" style="font-size: 9pt;">ENTREGA / RETIRADA:</div>
-                    <div class="print-bold">${order.is_pickup ? '📦 RETIRADA NO LOCAL' : '🛵 ENTREGA EM DOMICÍLIO'}</div>
-                    ${!order.is_pickup ? `
-                        <div style="margin-top: 4px; border-top: 1px solid #eee; padding-top: 2px;">
-                            ${escapeHtml(order.delivery_address)}<br>
-                            <strong>Bairro:</strong> ${escapeHtml(order.neighborhood)}
-                        </div>
-                    ` : ''}
-                </div>
-
-                <div class="print-dashed"></div>
-
-                <div style="margin-bottom: 8px;">
-                    <div class="print-bold" style="font-size: 9pt;">PAGAMENTO:</div>
-                    <div>${escapeHtml(order.payment_method.toUpperCase())}</div>
-                    <div class="print-bold">STATUS: ${escapeHtml(order.payment_status.toUpperCase())}</div>
-                </div>
-
-                ${order.observation ? `
-                    <div style="border: 1px solid black; padding: 4px; margin-top: 8px; font-style: italic; font-size: 9pt;">
-                        <div class="print-bold">OBSERVAÇÕES:</div>
-                        ${escapeHtml(order.observation)}
-                    </div>
-                ` : ''}
-
-                <div class="print-dashed"></div>
-
-                <div class="print-center" style="margin-top: 10px; font-size: 8pt;">
-                    OBRIGADO PELA PREFERÊNCIA!<br>
-                    ${escapeHtml(date)}
-                    <br><br>
-                    . . . . . . . . . . . . . . .
-                    <br><br><br>
-                </div>
-        `;
-
-        // Remove container antigo se existir
-        const oldContainer = document.getElementById('print-receipt');
-        if (oldContainer) {
-            oldContainer.remove();
-        }
-
-        const printContainer = document.createElement('div');
-        printContainer.id = 'print-receipt';
-        printContainer.innerHTML = receiptHtml;
-        document.body.appendChild(printContainer);
-
-        // Dispara a impressão na mesma janela
-        setTimeout(() => {
-            window.print();
-        }, 100);
+        // Salva os dados no localStorage para a nova aba ler
+        localStorage.setItem('print_data', JSON.stringify(order));
+        
+        // Abre a nova aba configurada para impressão
+        const printUrl = window.location.origin + window.location.pathname + '?print=order';
+        window.open(printUrl, '_blank');
     };
 
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {

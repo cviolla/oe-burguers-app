@@ -215,3 +215,94 @@ textarea {
 .animate-pulse-alert {
     animation: pulse-alert 1.5s infinite;
 }
+
+#print-receipt {
+    display: none;
+}
+
+@media print {
+    @page {
+        margin: 0;
+        size: auto;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    #root,
+    .whatsapp-float,
+    .no-print {
+        display: none !important;
+    }
+
+    #print-receipt {
+        display: block !important;
+        width: 48mm !important;
+        max-width: 48mm !important;
+        margin: 0 !important;
+        padding: 0 2mm 10mm 1mm !important;
+        box-sizing: border-box !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 9pt !important;
+        color: black !important;
+        line-height: 1.2 !important;
+        background: white !important;
+        overflow: visible !important;
+    }
+
+    #print-receipt * {
+        font-family: 'Courier New', Courier, monospace !important;
+        color: black !important;
+        box-sizing: border-box !important;
+    }
+
+    .print-dashed {
+        border-top: 1px dashed black !important;
+        margin: 4px 0 !important;
+        width: 100% !important;
+    }
+
+    .print-bold {
+        font-weight: bold !important;
+    }
+
+    .print-lg {
+        font-size: 11pt !important;
+    }
+
+    .print-center {
+        text-align: center !important;
+    }
+
+    .print-right {
+        text-align: right !important;
+    }
+
+    .print-row {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .print-col-left {
+        flex: 1 !important;
+        word-wrap: break-word !important;
+        text-align: left !important;
+    }
+
+    .print-col-right {
+        flex-shrink: 0 !important;
+        text-align: right !important;
+        white-space: nowrap !important;
+    }
+}

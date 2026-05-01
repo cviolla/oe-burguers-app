@@ -40,6 +40,20 @@ import StoreInfo from './pages/StoreInfo';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('onboarding');
+  const [printData, setPrintData] = useState<any>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('print') === 'order') {
+      const savedData = localStorage.getItem('print_data');
+      if (savedData) {
+        setPrintData(JSON.parse(savedData));
+        setTimeout(() => {
+          window.print();
+        }, 1000);
+      }
+    }
+  }, []);
   const [session, setSession] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -923,6 +937,7 @@ ${orderData.paymentMethod.toUpperCase() === 'PIX' ? '\n*Chave PIX (Telefone):*\n
   };
 
   const renderView = () => {
+    if (printData) return <PrintView order={printData} />;
     switch (currentView) {
       case 'onboarding':
         return <Onboarding onStart={() => {
@@ -1306,4 +1321,84 @@ const WhatsAppMovable: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
 };
 
 export default App;
+
+const PrintView: React.FC<{ order: any }> = ({ order }) => {
+  const date = new Date(order.created_at).toLocaleString('pt-BR');
+  const formatCurrency = (value: number) => (value / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const escapeHtml = (unsafe: string) => (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+  return (
+    <div id="print-receipt" style={{ display: 'block', background: 'white', color: 'black', padding: '10px' }}>
+      <div className="print-center">
+        <div className="print-bold print-lg">OE BURGUERS</div>
+        <div className="print-bold print-lg" style={{ marginTop: '4px' }}>PEDIDO #{escapeHtml(order.short_id)}</div>
+        <div style={{ fontSize: '8pt' }}>{escapeHtml(date)}</div>
+      </div>
+
+      <div className="print-dashed"></div>
+
+      <div style={{ marginBottom: '8px' }}>
+        <div className="print-bold">CLIENTE: {escapeHtml(order.client_name)}</div>
+        <div>TEL: {escapeHtml(order.client_phone)}</div>
+      </div>
+
+      <div className="print-dashed"></div>
+
+      <div style={{ marginBottom: '8px' }}>
+        <div className="print-bold" style={{ textTransform: 'uppercase', fontSize: '8pt', marginBottom: '4px' }}>ITENS:</div>
+        {order.order_items?.map((item: any, i: number) => (
+          <div key={i} className="print-row print-bold">
+            <span className="print-col-left">{item.quantity}x {escapeHtml(item.product_name)}</span>
+            <span className="print-col-right">{formatCurrency(item.price_cents * item.quantity)}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="print-dashed"></div>
+
+      <div className="print-row print-bold" style={{ fontSize: '11pt', margin: '6px 0' }}>
+        <span className="print-col-left">TOTAL:</span>
+        <span className="print-col-right">{formatCurrency(order.total_cents)}</span>
+      </div>
+
+      <div className="print-dashed"></div>
+
+      <div style={{ marginBottom: '8px' }}>
+        <div className="print-bold" style={{ fontSize: '9pt' }}>ENTREGA / RETIRADA:</div>
+        <div className="print-bold">{order.is_pickup ? '📦 RETIRADA NO LOCAL' : '🛵 ENTREGA EM DOMICÍLIO'}</div>
+        {!order.is_pickup && (
+          <div style={{ marginTop: '4px', borderTop: '1px solid #eee', paddingTop: '2px' }}>
+            {escapeHtml(order.delivery_address)}<br />
+            <strong>Bairro:</strong> {escapeHtml(order.neighborhood)}
+          </div>
+        )}
+      </div>
+
+      <div className="print-dashed"></div>
+
+      <div style={{ marginBottom: '8px' }}>
+        <div className="print-bold" style={{ fontSize: '9pt' }}>PAGAMENTO:</div>
+        <div>{escapeHtml(order.payment_method?.toUpperCase())}</div>
+        <div className="print-bold">STATUS: {escapeHtml(order.payment_status?.toUpperCase() || 'PAGO')}</div>
+      </div>
+
+      {order.observation && (
+        <div style={{ border: '1px solid black', padding: '4px', marginTop: '8px', fontStyle: 'italic', fontSize: '9pt' }}>
+          <div className="print-bold">OBSERVAÇÕES:</div>
+          {escapeHtml(order.observation)}
+        </div>
+      )}
+
+      <div className="print-dashed"></div>
+
+      <div className="print-center" style={{ marginTop: '10px', fontSize: '8pt' }}>
+        OBRIGADO PELA PREFERÊNCIA!<br />
+        {escapeHtml(date)}
+        <br /><br />
+        . . . . . . . . . . . . . . .
+        <br /><br /><br />
+      </div>
+    </div>
+  );
+};
 
