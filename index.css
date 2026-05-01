@@ -252,15 +252,15 @@ textarea {
 
     #print-receipt {
         display: block !important;
-        width: 48mm !important;
-        max-width: 48mm !important;
+        width: 44mm !important;
+        max-width: 44mm !important;
         margin: 0 !important;
-        padding: 0 2mm 10mm 1mm !important;
+        padding: 0 1mm 10mm 1mm !important;
         box-sizing: border-box !important;
         font-family: 'Courier New', Courier, monospace !important;
-        font-size: 9pt !important;
+        font-size: 8pt !important;
         color: black !important;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
         background: white !important;
         overflow: visible !important;
     }
@@ -282,7 +282,7 @@ textarea {
     }
 
     .print-lg {
-        font-size: 11pt !important;
+        font-size: 10pt !important;
     }
 
     .print-center {
