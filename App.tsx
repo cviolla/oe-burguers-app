@@ -36,6 +36,7 @@ import Onboarding from './pages/Onboarding';
 import Login from './pages/Login';
 import Navbar from './components/Navbar';
 import Legal from './pages/Legal';
+
 import StoreInfo from './pages/StoreInfo';
 
 const App: React.FC = () => {
@@ -890,7 +891,7 @@ Delivery: ${deliveryFeeCents === 0 ? 'Grátis' : `R$ ${(deliveryFeeCents / 100).
 *PAGAMENTO*
 Forma: ${orderData.paymentMethod.toUpperCase()}
 Status: Não pago
-${orderData.paymentMethod.toUpperCase() === 'PIX' ? '\n*Chave PIX (Telefone):*\n21972724360\nNatany (Itau)\n\n*Por favor, envie o comprovante!*' : ''}
+${orderData.paymentMethod.toUpperCase() === 'PIX' ? '\n*Chave PIX (CNPJ):*\n49336625000118\nOE BURGUERS\n\n*Por favor, envie o comprovante!*' : ''}
 
 ------------------------------
 *OE BURGUERS agradece a preferência!*`;
