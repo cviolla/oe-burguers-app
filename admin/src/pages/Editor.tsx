@@ -359,6 +359,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
         fetchCategories();
         fetchOrders();
         fetchCustomers();
+        runOrdersPurge();
 
         console.log('🔌 Iniciando conexão Realtime para pedidos...');
 
@@ -461,6 +462,67 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             .select('*, order_items(*)')
             .order('created_at', { ascending: false });
         if (!error && data) setOrders(data);
+    };
+
+    // Limpeza automática de pedidos com mais de 60 dias
+    const runOrdersPurge = async () => {
+        const PURGE_KEY = 'orders_purge_last_run';
+        const RETENTION_DAYS = 60;
+
+        const lastRun = localStorage.getItem(PURGE_KEY);
+        const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+        // Executa no máximo uma vez por dia
+        if (lastRun === today) {
+            console.log('🧹 Purge de pedidos: já executada hoje, pulando.');
+            return;
+        }
+
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
+        const cutoffISO = cutoffDate.toISOString();
+
+        console.log(`🧹 Iniciando purge de pedidos anteriores a ${cutoffDate.toLocaleDateString('pt-BR')}...`);
+
+        try {
+            // Busca os IDs dos pedidos antigos
+            const { data: oldOrders, error: fetchError } = await supabase
+                .from('orders')
+                .select('id')
+                .lt('created_at', cutoffISO);
+
+            if (fetchError) throw fetchError;
+
+            if (!oldOrders || oldOrders.length === 0) {
+                console.log('🧹 Purge: nenhum pedido antigo encontrado.');
+                localStorage.setItem(PURGE_KEY, today);
+                return;
+            }
+
+            const oldOrderIds = oldOrders.map((o: { id: string }) => o.id);
+
+            // Deleta os itens dos pedidos antigos (evita violação de FK)
+            const { error: itemsError } = await supabase
+                .from('order_items')
+                .delete()
+                .in('order_id', oldOrderIds);
+
+            if (itemsError) throw itemsError;
+
+            // Deleta os pedidos antigos
+            const { error: ordersError } = await supabase
+                .from('orders')
+                .delete()
+                .lt('created_at', cutoffISO);
+
+            if (ordersError) throw ordersError;
+
+            console.log(`🧹 Purge concluída: ${oldOrderIds.length} pedido(s) removido(s).`);
+            localStorage.setItem(PURGE_KEY, today);
+        } catch (err) {
+            console.error('🧹 Erro na purge de pedidos:', err);
+            // Não salva a data para tentar novamente na próxima abertura
+        }
     };
 
 
