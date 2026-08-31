@@ -76,6 +76,10 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     const [timeRange, setTimeRange] = useState<'7' | '15' | '30' | '90' | 'all'>('all');
     const [pushEnabled, setPushEnabled] = useState(true);
 
+    // Seleção em lote
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+
     const filteredOrdersRange = React.useMemo(() => {
         if (timeRange === 'all') return orders;
 
@@ -526,6 +530,62 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     };
 
 
+    // --- Edição em Lote ---
+    const toggleOrderSelection = (id: string) => {
+        setSelectedOrderIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = (visibleOrders: Order[]) => {
+        if (selectedOrderIds.size === visibleOrders.length) {
+            setSelectedOrderIds(new Set());
+        } else {
+            setSelectedOrderIds(new Set(visibleOrders.map(o => o.id)));
+        }
+    };
+
+    const exitSelectionMode = () => {
+        setSelectionMode(false);
+        setSelectedOrderIds(new Set());
+    };
+
+    const batchUpdateOrders = async (
+        updates: Partial<{ status: Order['status']; payment_status: Order['payment_status'] }>,
+        actionLabel: string
+    ) => {
+        if (loading || selectedOrderIds.size === 0) return;
+
+        const confirmed = await showConfirm?.(
+            `Ação em Lote: ${actionLabel}`,
+            `Aplicar "${actionLabel}" em ${selectedOrderIds.size} pedido(s) selecionado(s)?`,
+            'Confirmar',
+            'Cancelar',
+            'checklist'
+        );
+        if (!confirmed) return;
+
+        setLoading(true);
+        try {
+            const ids = Array.from(selectedOrderIds);
+            const { error } = await supabase
+                .from('orders')
+                .update(updates)
+                .in('id', ids);
+
+            if (error) throw error;
+            fetchOrders();
+            exitSelectionMode();
+        } catch (error: any) {
+            console.error('Erro na ação em lote:', error);
+            showAlert?.('Erro', 'Não foi possível executar a ação em lote: ' + (error.message || 'Erro desconhecido'), 'error_outline');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const updatePaymentStatus = async (orderId: string, paymentStatus: Order['payment_status']) => {
         if (loading) return;
@@ -1456,21 +1516,42 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
             <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                     <h2 className="text-xl font-black  tracking-tighter uppercase leading-none">
-                        {showOrderTrash ? 'Pedidos Cancelados' : 'Fila de Pedidos'}
+                        {selectionMode
+                            ? `${selectedOrderIds.size} selecionado(s)`
+                            : showOrderTrash ? 'Pedidos Cancelados' : 'Fila de Pedidos'}
                     </h2>
                     <p className="text-[9px] text-white/20 font-black uppercase tracking-widest">
-                        {showOrderTrash ? 'Lixeira de pedidos' : 'Painel de controle de vendas'}
+                        {selectionMode ? 'Modo de seleção ativo' : showOrderTrash ? 'Lixeira de pedidos' : 'Painel de controle de vendas'}
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    {!showOrderTrash && (
+                    {!showOrderTrash && !selectionMode && (
                         <span className="bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
                             <span className="w-1 h-1 bg-primary rounded-full animate-pulse"></span>
                             {orders.filter(o => o.status !== 'finalizado' && o.status !== 'cancelado').length} Ativos
                         </span>
                     )}
+                    {!showOrderTrash && (
+                        <button
+                            onClick={() => {
+                                if (selectionMode) {
+                                    exitSelectionMode();
+                                } else {
+                                    setSelectionMode(true);
+                                }
+                            }}
+                            className={`w-9 h-9 aspect-square shrink-0 rounded-full flex items-center justify-center transition-all border ${
+                                selectionMode
+                                    ? 'bg-primary text-dark-bg border-primary'
+                                    : 'bg-white/5 text-white/40 border-white/10 hover:text-primary'
+                            }`}
+                            title={selectionMode ? 'Cancelar seleção' : 'Selecionar pedidos'}
+                        >
+                            <span className="material-icons-round text-lg">{selectionMode ? 'close' : 'checklist'}</span>
+                        </button>
+                    )}
                     <button
-                        onClick={() => setShowOrderTrash(!showOrderTrash)}
+                        onClick={() => { setShowOrderTrash(!showOrderTrash); exitSelectionMode(); }}
                         className={`w-9 h-9 aspect-square shrink-0 rounded-full flex items-center justify-center transition-all ${showOrderTrash ? 'bg-primary text-dark-bg' : 'bg-white/5 text-white/40 border border-white/10 hover:text-rose-500'}`}
                         title={showOrderTrash ? "Voltar para Fila" : "Ver Lixeira"}
                     >
@@ -1479,25 +1560,119 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                 </div>
             </div>
 
+            {/* Barra de seleção em lote */}
+            {selectionMode && (() => {
+                const visibleOrders = orders.filter(o => o.status !== 'finalizado' && o.status !== 'cancelado');
+                const allSelected = selectedOrderIds.size === visibleOrders.length && visibleOrders.length > 0;
+                return (
+                    <div className="flex items-center justify-between bg-dark-card/80 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 animate-in fade-in slide-in-from-top-3 duration-300">
+                        <button
+                            onClick={() => toggleSelectAll(visibleOrders)}
+                            className={`flex items-center gap-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                                allSelected ? 'text-primary' : 'text-white/40 hover:text-white'
+                            }`}
+                        >
+                            <span className={`material-icons-round text-base ${
+                                allSelected ? 'text-primary' : selectedOrderIds.size > 0 ? 'text-primary/60' : 'text-white/30'
+                            }`}>
+                                {allSelected ? 'check_box' : selectedOrderIds.size > 0 ? 'indeterminate_check_box' : 'check_box_outline_blank'}
+                            </span>
+                            {allSelected ? 'Desselecionar todos' : 'Selecionar todos'}
+                        </button>
+                        <span className="text-[9px] text-white/30 font-bold">{visibleOrders.length} visíveis</span>
+                    </div>
+                );
+            })()}
+
+            {/* Barra flutuante de ações em lote */}
+            {selectionMode && selectedOrderIds.size > 0 && (
+                <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-auto z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-dark-card border border-white/15 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl overflow-hidden">
+                        <div className="px-4 py-2 border-b border-white/5 flex items-center justify-between">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/40">Ação em Lote</span>
+                            <span className="text-[9px] font-black text-primary">{selectedOrderIds.size} pedido(s)</span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
+                            <button
+                                onClick={() => batchUpdateOrders({ payment_status: 'pago' }, 'Confirmar Pagamento')}
+                                disabled={loading}
+                                className="flex flex-col items-center gap-1.5 px-5 py-3 bg-dark-card hover:bg-emerald-500/10 text-emerald-500 transition-all active:scale-95 disabled:opacity-40"
+                            >
+                                <span className="material-icons-round text-xl">payments</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest">Confirmar Pgto</span>
+                            </button>
+                            <button
+                                onClick={() => batchUpdateOrders({ status: 'preparando' }, 'Iniciar Produção')}
+                                disabled={loading}
+                                className="flex flex-col items-center gap-1.5 px-5 py-3 bg-dark-card hover:bg-amber-500/10 text-amber-500 transition-all active:scale-95 disabled:opacity-40"
+                            >
+                                <span className="material-icons-round text-xl">restaurant</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest">Em Produção</span>
+                            </button>
+                            <button
+                                onClick={() => batchUpdateOrders({ status: 'finalizado', payment_status: 'pago' }, 'Finalizar')}
+                                disabled={loading}
+                                className="flex flex-col items-center gap-1.5 px-5 py-3 bg-dark-card hover:bg-primary/10 text-primary transition-all active:scale-95 disabled:opacity-40"
+                            >
+                                <span className="material-icons-round text-xl">check_circle</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest">Finalizar</span>
+                            </button>
+                            <button
+                                onClick={() => batchUpdateOrders({ status: 'cancelado' }, 'Cancelar')}
+                                disabled={loading}
+                                className="flex flex-col items-center gap-1.5 px-5 py-3 bg-dark-card hover:bg-rose-500/10 text-rose-500 transition-all active:scale-95 disabled:opacity-40"
+                            >
+                                <span className="material-icons-round text-xl">cancel</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest">Cancelar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {(showOrderTrash
                     ? orders.filter(o => o.status === 'cancelado')
                     : orders.filter(o => o.status !== 'finalizado' && o.status !== 'cancelado')
                 ).map(order => (
-                    <div key={order.id} className={`bg-dark-card/60 backdrop-blur-md border rounded-lg p-4 space-y-3 premium-shadow transition-all ${showOrderTrash ? 'border-rose-500/20 opacity-80' : 'border-white/5 hover:border-primary/20'}`}>
+                    <div
+                        key={order.id}
+                        onClick={() => selectionMode && toggleOrderSelection(order.id)}
+                        className={`bg-dark-card/60 backdrop-blur-md border rounded-lg p-4 space-y-3 premium-shadow transition-all ${
+                            selectionMode
+                                ? selectedOrderIds.has(order.id)
+                                    ? 'border-primary/60 bg-primary/5 cursor-pointer'
+                                    : 'border-white/5 hover:border-primary/20 cursor-pointer opacity-60'
+                                : showOrderTrash
+                                    ? 'border-rose-500/20 opacity-80'
+                                    : 'border-white/5 hover:border-primary/20'
+                        }`}
+                    >
                         <div className="flex justify-between items-center">
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => handlePrintOrder(order)}
-                                    className="w-8 h-8 bg-white/5 text-white/40 border border-white/10 rounded-md flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all active:scale-90"
-                                    title="Imprimir Pedido"
-                                >
-                                    <span className="material-icons-round text-sm">print</span>
-                                </button>
+                            <div className="flex gap-2 items-center">
+                                {selectionMode ? (
+                                    <span
+                                        className={`material-icons-round text-xl transition-all ${
+                                            selectedOrderIds.has(order.id) ? 'text-primary' : 'text-white/20'
+                                        }`}
+                                        onClick={(e) => { e.stopPropagation(); toggleOrderSelection(order.id); }}
+                                    >
+                                        {selectedOrderIds.has(order.id) ? 'check_box' : 'check_box_outline_blank'}
+                                    </span>
+                                ) : (
+                                    <button
+                                        onClick={() => handlePrintOrder(order)}
+                                        className="w-8 h-8 bg-white/5 text-white/40 border border-white/10 rounded-md flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all active:scale-90"
+                                        title="Imprimir Pedido"
+                                    >
+                                        <span className="material-icons-round text-sm">print</span>
+                                    </button>
+                                )}
                                 <span className={`px-2 py-1 border rounded-md text-[9px] font-black  ${showOrderTrash ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
                                     #{order.short_id}
                                 </span>
                             </div>
+                            {!selectionMode && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -1507,6 +1682,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
                                     }`}>
                                 {order.payment_status === 'pago' ? 'Pago' : 'Confirmar Pagamento'}
                             </button>
+                            )}
                         </div>
 
                         <div className="space-y-0.5">
