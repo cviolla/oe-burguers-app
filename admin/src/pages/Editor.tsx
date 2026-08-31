@@ -73,7 +73,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
     const [newClient, setNewClient] = useState({ name: '', phone: '' });
     const [menuSubTab, setMenuSubTab] = useState<'products' | 'addons'>('products');
     const [editingAddon, setEditingAddon] = useState<any | null>(null);
-    const [timeRange, setTimeRange] = useState<'7' | '15' | '30' | '90' | 'all'>('all');
+    const [timeRange, setTimeRange] = useState<'7' | '30' | '60' | 'all'>('all');
     const [pushEnabled, setPushEnabled] = useState(true);
 
     // Seleção em lote
@@ -1104,7 +1104,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
                         {/* Time Range Selector */}
                         <div className="flex bg-white/5 p-1 rounded-lg border border-white/5">
-                            {['7', '15', '30', '90', 'all'].map((range) => (
+                            {['7', '30', '60', 'all'].map((range) => (
                                 <button
                                     key={range}
                                     onClick={() => setTimeRange(range as any)}
@@ -1804,7 +1804,7 @@ const Editor: React.FC<EditorProps> = ({ onBack, products, onRefresh, deliveryFe
 
                     {/* Time Range Selector */}
                     <div className="flex bg-white/5 p-1 rounded-lg border border-white/5">
-                        {['7', '15', '30', '90', 'all'].map((range) => (
+                        {['7', '30', '60', 'all'].map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range as any)}
